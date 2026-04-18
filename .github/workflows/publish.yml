@@ -1,9 +1,9 @@
 name: Publish to npm
 
-# Publishes @cryptascreen/sdk to npm on a GitHub Release.
-# Requires:
-#   - npm org "cryptascreen" exists (free for public packages)
-#   - GitHub repo secret NPM_TOKEN (npm automation token with publish access to the scope)
+# Publishes @cryptascreen/sdk to npm via OIDC Trusted Publishing.
+# Requires: Trusted Publisher configured on npmjs.com for this package,
+# pointing at cryptascreen/cryptascreen-sdk-typescript + workflow file "publish.yml".
+# No NPM_TOKEN or other long-lived secret is required.
 
 on:
   release:
@@ -27,6 +27,9 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      - name: Upgrade npm (OIDC trusted publishing requires >= 11.5.1)
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm ci
 
@@ -39,7 +42,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish to npm
+      - name: Publish to npm (OIDC)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
