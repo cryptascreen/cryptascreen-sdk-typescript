@@ -1,39 +1,53 @@
+// Canonical investigation/graph contract. Mirrors backend
+// com.cryptascreen.graph.GraphRequest / GraphResponse / GraphNode / GraphEdge / GraphStats.
+
 export interface GraphRequest {
-  address: string;
+  seedAddress: string;
   chain: string;
-  /** Maximum depth of the graph traversal. Defaults to 2 */
-  depth?: number;
-  /** Minimum transfer value (in USD) to include in the graph */
-  minValue?: number;
-  /** Only include transfers after this date (ISO 8601) */
-  startDate?: string;
-  /** Only include transfers before this date (ISO 8601) */
-  endDate?: string;
+  /** BOTH (default), FORWARD, or BACKWARD. */
+  direction?: "BOTH" | "FORWARD" | "BACKWARD";
+  /** 1..10, default 3. */
+  maxHops?: number;
+  /** 1..1000, default 200. */
+  maxNodes?: number;
+  minValueUsd?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  aggregateEdges?: boolean;
+  forceRefresh?: boolean;
 }
 
 export interface GraphNode {
   id: string;
   address: string;
   chain: string;
-  label?: string;
-  entityType?: string;
-  riskLevel?: string;
-  sanctioned: boolean;
-  totalInflow: number;
-  totalOutflow: number;
-  transactionCount: number;
+  label?: string | null;
+  category?: string | null;
+  riskScore: number;
+  riskLevel?: string | null;
+  sanctionsMatch: boolean;
+  flagTypes: string[];
+  isSeed: boolean;
+  isFlagged: boolean;
+  totalInboundUsd?: number | null;
+  totalOutboundUsd?: number | null;
+  txCount: number;
+  firstSeen?: string | null;
+  lastSeen?: string | null;
 }
 
 export interface GraphEdge {
   id: string;
-  sourceAddress: string;
-  targetAddress: string;
+  source: string;
+  target: string;
+  txHash?: string | null;
   chain: string;
-  totalValue: number;
-  transactionCount: number;
-  firstTransfer: string;
-  lastTransfer: string;
-  tokens: string[];
+  valueUsd?: number | null;
+  valueNative?: number | null;
+  assetSymbol?: string | null;
+  timestamp?: string | null;
+  txCount: number;
+  isAggregated: boolean;
 }
 
 export interface GraphStats {
@@ -41,42 +55,20 @@ export interface GraphStats {
   totalEdges: number;
   flaggedNodes: number;
   sanctionedNodes: number;
-  totalValue: number;
+  totalValueTracedUsd?: number | null;
+  maxHopsReached: number;
+  truncated: boolean;
 }
 
 export interface GraphResponse {
-  rootAddress: string;
+  seedAddress: string;
   chain: string;
-  depth: number;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  flaggedNodeIds: string[];
+  sanctionedNodeIds: string[];
   stats: GraphStats;
   generatedAt: string;
 }
 
-export type GraphExportFormat = "json" | "csv" | "graphml";
-
-export interface TraceRequest {
-  sourceAddress: string;
-  targetAddress: string;
-  chain: string;
-  /** Maximum hops to search. Defaults to 5 */
-  maxHops?: number;
-  minValue?: number;
-}
-
-export interface TracePath {
-  hops: GraphNode[];
-  edges: GraphEdge[];
-  totalValue: number;
-  pathLength: number;
-}
-
-export interface TraceResponse {
-  sourceAddress: string;
-  targetAddress: string;
-  chain: string;
-  paths: TracePath[];
-  shortestPath: number;
-  tracedAt: string;
-}
+export type GraphExportFormat = "json" | "csv";

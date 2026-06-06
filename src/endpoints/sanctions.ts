@@ -1,26 +1,24 @@
 import type { AxiosInstance } from "axios";
 import type {
-  SanctionsCheckRequest,
-  SanctionsCheckResult,
-  SanctionsStatus,
+  SanctionsCheckResponse,
+  SanctionsStatusResponse,
 } from "../types/sanctions.js";
 
 export class SanctionsEndpoints {
   constructor(private readonly http: AxiosInstance) {}
 
-  /** Check an address against all sanctions lists */
-  async check(request: SanctionsCheckRequest): Promise<SanctionsCheckResult> {
-    const { data } = await this.http.post<SanctionsCheckResult>(
-      "/api/v1/sanctions/check",
-      request,
+  /** Exact-match check of an address against all self-hosted sanctions lists. */
+  async check(chain: string, address: string): Promise<SanctionsCheckResponse> {
+    const { data } = await this.http.get<SanctionsCheckResponse>(
+      `/api/v1/sanctions/check/${chain}/${address}`,
     );
     return data;
   }
 
-  /** Get the current sanctions status for an address */
-  async getStatus(address: string, chain: string): Promise<{ address: string; chain: string; status: SanctionsStatus }> {
-    const { data } = await this.http.get<{ address: string; chain: string; status: SanctionsStatus }>(
-      `/api/v1/sanctions/status/${chain}/${address}`,
+  /** Sanctions ingestion status — total active addresses per source. */
+  async getStatus(): Promise<SanctionsStatusResponse> {
+    const { data } = await this.http.get<SanctionsStatusResponse>(
+      "/api/v1/sanctions/status",
     );
     return data;
   }

@@ -3,30 +3,28 @@ import type {
   GraphRequest,
   GraphResponse,
   GraphExportFormat,
-  TraceRequest,
-  TraceResponse,
 } from "../types/graph.js";
 
 export class GraphEndpoints {
   constructor(private readonly http: AxiosInstance) {}
 
-  /** Build a transaction graph around an address */
+  /** Build a flow-of-funds graph via BFS from a seed address. */
   async buildGraph(request: GraphRequest): Promise<GraphResponse> {
     const { data } = await this.http.post<GraphResponse>(
-      "/api/v1/graph/build",
+      "/api/v1/investigate/graph",
       request,
     );
     return data;
   }
 
-  /** Export a previously built graph in the specified format */
+  /** Export a flow-of-funds graph as a JSON or CSV file download. */
   async exportGraph(
-    address: string,
-    chain: string,
+    request: GraphRequest,
     format: GraphExportFormat = "json",
   ): Promise<Blob | string> {
-    const { data } = await this.http.get(
-      `/api/v1/graph/export/${chain}/${address}`,
+    const { data } = await this.http.post(
+      "/api/v1/investigate/graph/export",
+      request,
       {
         params: { format },
         responseType: format === "json" ? "json" : "blob",
@@ -35,10 +33,10 @@ export class GraphEndpoints {
     return data;
   }
 
-  /** Trace the flow of funds between two addresses */
-  async trace(request: TraceRequest): Promise<TraceResponse> {
-    const { data } = await this.http.post<TraceResponse>(
-      "/api/v1/graph/trace",
+  /** Trace funds forward or backward from a seed address (directional graph build). */
+  async trace(request: GraphRequest): Promise<GraphResponse> {
+    const { data } = await this.http.post<GraphResponse>(
+      "/api/v1/investigate/trace",
       request,
     );
     return data;

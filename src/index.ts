@@ -22,21 +22,22 @@ export type {
 // Types - Screening
 export type {
   RiskLevel,
+  Coverage,
   ScreeningFlag,
+  ScreeningResponse,
   ScreeningResult,
   ScreenAddressRequest,
   BulkScreeningRequest,
-  BulkScreeningResponse,
   ScreeningJobStatus,
+  ScreeningJobSummary,
   ScreeningJob,
 } from "./types/screening.js";
 
 // Types - Sanctions
 export type {
-  SanctionsStatus,
+  SanctionsCheckResponse,
   SanctionsCheckResult,
-  SanctionListMatch,
-  SanctionsCheckRequest,
+  SanctionsStatusResponse,
 } from "./types/sanctions.js";
 
 // Types - Graph
@@ -47,9 +48,6 @@ export type {
   GraphEdge,
   GraphStats,
   GraphExportFormat,
-  TraceRequest,
-  TracePath,
-  TraceResponse,
 } from "./types/graph.js";
 
 // Types - Cases

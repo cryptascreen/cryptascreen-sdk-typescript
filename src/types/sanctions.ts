@@ -1,23 +1,23 @@
-export type SanctionsStatus = "SANCTIONED" | "NOT_SANCTIONED" | "PENDING_REVIEW" | "UNKNOWN";
+// Canonical sanctions contract. Mirrors backend
+// com.cryptascreen.dto.SanctionsCheckResponse and the /sanctions/status payload.
 
-export interface SanctionsCheckResult {
+export interface SanctionsCheckResponse {
   address: string;
   chain: string;
-  status: SanctionsStatus;
-  sanctionLists: SanctionListMatch[];
-  checkedAt: string;
-}
-
-export interface SanctionListMatch {
-  listName: string;
-  listAuthority: string;
-  entityName?: string;
-  entityType?: string;
-  addedDate?: string;
+  match: boolean;
+  listName?: string | null;
+  entityName?: string | null;
+  program?: string | null;
+  /** Sanction list / category enum, e.g. OFAC_SDN, EU_CONSOLIDATED. */
+  sanctionType?: string | null;
   confidence: number;
 }
 
-export interface SanctionsCheckRequest {
-  address: string;
-  chain: string;
+/** Back-compat alias. */
+export type SanctionsCheckResult = SanctionsCheckResponse;
+
+export interface SanctionsStatusResponse {
+  total_active: number;
+  by_source: Record<string, number>;
+  last_checked: string;
 }

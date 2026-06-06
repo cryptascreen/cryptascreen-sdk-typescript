@@ -57,7 +57,7 @@ describe("CryptaScreenClient", () => {
   });
 
   it("should set X-API-Key header on requests", async () => {
-    mock.onPost("/api/v1/screening/address").reply((config) => {
+    mock.onPost("/api/v1/screen/address").reply((config) => {
       expect(config.headers?.["X-API-Key"]).toBe("csk_test_key_123");
       return [200, { address: "0x123", riskLevel: "LOW", riskScore: 10 }];
     });
@@ -69,7 +69,7 @@ describe("CryptaScreenClient", () => {
   });
 
   it("should throw AuthenticationError on 401", async () => {
-    mock.onPost("/api/v1/screening/address").reply(401, {
+    mock.onPost("/api/v1/screen/address").reply(401, {
       message: "Invalid API key",
     });
 
@@ -102,7 +102,7 @@ describe("CryptaScreenClient", () => {
   });
 
   it("should throw RateLimitError on 429 after retries exhausted", async () => {
-    mock.onPost("/api/v1/screening/address").reply(429, {
+    mock.onPost("/api/v1/screen/address").reply(429, {
       message: "Rate limit exceeded",
     }, { "retry-after": "1" });
 
@@ -113,7 +113,7 @@ describe("CryptaScreenClient", () => {
 
   it("should retry on 5xx and succeed", async () => {
     let callCount = 0;
-    mock.onPost("/api/v1/screening/address").reply(() => {
+    mock.onPost("/api/v1/screen/address").reply(() => {
       callCount++;
       if (callCount === 1) {
         return [500, { message: "Internal server error" }];
@@ -131,7 +131,7 @@ describe("CryptaScreenClient", () => {
   });
 
   it("should throw CryptaScreenError on unknown errors", async () => {
-    mock.onPost("/api/v1/screening/address").reply(503, {
+    mock.onPost("/api/v1/screen/address").reply(503, {
       message: "Service unavailable",
       code: "SERVICE_UNAVAILABLE",
     });
