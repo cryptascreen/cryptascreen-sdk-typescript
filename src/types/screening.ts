@@ -2,7 +2,13 @@
 // com.cryptascreen.dto.ScreeningResponse / ScreeningRequest / BulkScreeningRequest /
 // ScreeningJobDto. See openapi-customer.json in the backend repo.
 
-export type RiskLevel = "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type RiskLevel =
+  | "MINIMAL"
+  | "LOW"
+  | "MEDIUM"
+  | "HIGH"
+  | "CRITICAL"
+  | "UNKNOWN"; // chain not analyzed (coverage NOT_ANALYZED, no findings)
 
 export type Coverage = "COVERED" | "NOT_ANALYZED";
 
@@ -22,7 +28,8 @@ export interface ScreeningResponse {
   chain: string;
   /** COVERED, or NOT_ANALYZED when the chain is outside the supported analysis set. */
   coverage: Coverage;
-  riskScore: number;
+  /** Null when coverage = NOT_ANALYZED with no findings (chain not assessed). */
+  riskScore: number | null;
   riskLevel: RiskLevel;
   sanctionsMatch: boolean;
   entityLabel?: string | null;
