@@ -28,3 +28,76 @@ Thumbs.db
 # Tests
 coverage/
 .nyc_output/
+
+# ─── Secrets: match on substance, not on an exact filename ────────────────────
+# Two failure modes this closes, both observed on 2026-07-27:
+#
+#  1. Drive/OneDrive sync writes shadow copies with the sync suffix BEFORE the
+#     extension — ".env (1).local", "runner (1).env.s1". Every extension-anchored
+#     rule (".env.local", "*.env") misses those. ".env (1).local" reached `git add -A`
+#     staged in cryptacount-api and was caught only by reading the staged file list
+#     before pushing. cryptachain had seven such files staging-eligible at once.
+#  2. Rules that enumerate go stale. The first draft of THIS block enumerated
+#     " (1)", " (2)", " (3)" and a probe file named ".env (9).local" sailed through
+#     it — the same defect it was written to fix. Match the shape, never the list.
+#
+# Order matters: last match wins, so the re-includes MUST stay below the excludes.
+# Verify changes with brand-new probe files, not with tracked ones: `git check-ignore`
+# reports "not ignored" for anything already in the index, so testing against tracked
+# files is vacuous and will pass no matter what these rules say.
+
+# Sync shadow copies — any parenthesised suffix, any number. Nothing with one is
+# ever intentional.
+*.orig
+*.bak
+
+# Secret-bearing files by substance.
+.env*
+*.env
+*.env.*
+*secret*
+*credential*
+*.pem
+*.p12
+*.pfx
+*.key
+*.jks
+*keystore*
+*service-account*.json
+*serviceaccount*.json
+*.kubeconfig
+
+# …but never swallow source code, templates or docs. Without these, a new file
+# named CredentialsManager.java or rotate-secret.sh is silently untracked — a
+# failure that stays invisible until someone clones and the file is simply gone.
+# Deliberately NOT re-included: *.yml/*.yaml (k8s Secret manifests, application-*.yml)
+# and *.json (service-account keys, audit dumps) genuinely do carry secrets.
+!*.java
+!*.kt
+!*.ts
+!*.tsx
+!*.js
+!*.jsx
+!*.mjs
+!*.cjs
+!*.go
+!*.py
+!*.rs
+!*.cs
+!*.sql
+!*.md
+!*.sh
+!*.ps1
+!*.bat
+!*.http
+!*.example
+!*.sample
+!*.template
+!*.dist
+!*.d.ts
+
+# Sync shadow copies, LAST so they beat every re-include above: "Foo (1).java" and
+# "config (2).yml" are never intentional, whatever the extension.
+* (*)*
+* - Copy*
+* copy*
