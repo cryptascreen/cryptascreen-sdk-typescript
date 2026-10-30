@@ -51,6 +51,7 @@ export type {
   ScreeningEvaluationPage,
   AsyncSubmitOptions,
   ScreeningJobResultsPage,
+  ScreeningJobItem,
   PageOptions,
 } from "./types/screening.js";
 export {

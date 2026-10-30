@@ -52,8 +52,8 @@ console.log(job.results);
 client.screening.screenAddress({ address, chain, includeHeuristics?, forceRefresh?, mode? })
 client.screening.screenBulk({ addresses, chains })                       // sync, max 1000
 client.screening.screenBulkAsync({ addresses, chains }, { idempotencyKey? }) // async job, max 10000; Idempotency-Key always sent
-client.screening.pollJob(jobId)                                           // status: PENDING|PROCESSING|COMPLETED|PARTIAL|FAILED|CANCELLING|CANCELLED
-client.screening.getJobResults(jobId, { page?, size? })                   // per-address results, 0-based pages
+client.screening.pollJob(jobId)                                           // status: PENDING|PROCESSING|COMPLETED|PARTIAL|FAILED|CANCELLED (+ cancelRequested)
+client.screening.getJobResults(jobId, { page?, size? })                   // stored per-address items, 0-based pages
 client.screening.cancelJob(jobId)
 client.screening.listJobs()
 client.screening.screenBulkAndWait(request, pollIntervalMs?, timeoutMs?, { idempotencyKey? })

@@ -180,15 +180,29 @@ describe("CS-08 contract details", () => {
     expect(keys[0]).toBe(keys[1]);
   }, 10_000);
 
-  it("job results: page params, items/content normalisation", async () => {
-    mock.onGet("/api/v1/screen/jobs/j/results").reply((config) => {
+  it("job results: page params, backend body {totalItems, items[]} and Spring-style content", async () => {
+    mock.onGet("/api/v1/screen/jobs/j/results").replyOnce((config) => {
       expect(config.params).toEqual({ page: 1, size: 50 });
-      return [200, { content: [{ address: ADDR, riskScore: null, riskLevel: "UNKNOWN" }], number: 1, size: 50, totalElements: 51, totalPages: 2 }];
+      return [200, {
+        jobId: "j", status: "PARTIAL", page: 1, size: 50, totalItems: 51, totalPages: 2,
+        items: [
+          { index: 50, address: ADDR, chain: "ethereum", status: "SCREENED", evaluationId: "e9", riskScore: null, riskLevel: "UNKNOWN", result: null },
+        ],
+      }];
     });
     const p = await client.screening.getJobResults("j", { page: 1, size: 50 });
-    expect(p.page).toBe(1);
-    expect(p.totalPages).toBe(2);
+    expect(p).toMatchObject({ jobId: "j", status: "PARTIAL", page: 1, size: 50, totalItems: 51, totalPages: 2 });
     expect(p.items[0].riskScore).toBeNull();
+    expect(p.items[0].evaluationId).toBe("e9");
+    mock.onGet("/api/v1/screen/jobs/j/results").replyOnce(200, { content: [{ index: 0, address: "x", chain: "ethereum", status: "ERROR", errorCode: "UNKNOWN_CHAIN" }], number: 0, totalElements: 1, totalPages: 1 });
+    const q = await client.screening.getJobResults("j");
+    expect(q.totalItems).toBe(1);
+    expect(q.items[0].errorCode).toBe("UNKNOWN_CHAIN");
+  });
+
+  it("cancel of a finished job surfaces 409 JOB_ALREADY_TERMINAL", async () => {
+    mock.onPost("/api/v1/screen/jobs/j/cancel").reply(409, { error: "JOB_ALREADY_TERMINAL", message: "The job already finished" });
+    await expect(client.screening.cancelJob("j")).rejects.toMatchObject({ status: 409 });
   });
 
   it("evaluations list passes page/size and keeps a null stored score", async () => {

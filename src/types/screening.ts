@@ -356,9 +356,7 @@ export type ScreeningJobStatus =
   | "COMPLETED"
   | "PARTIAL"
   | "FAILED"
-  /** CS-08: cancel requested, workers stopping */
-  | "CANCELLING"
-  /** CS-08: terminal — cancelled before completion; processed items keep their results */
+  /** CS-08 (additive): terminal — cancelled before completion; processed items keep their results */
   | "CANCELLED";
 
 /** Terminal job statuses (polling stops). Unknown future values are NOT terminal. */
@@ -388,6 +386,34 @@ export interface ScreeningJob {
   createdAt: string;
   startedAt?: string | null;
   completedAt?: string | null;
+  // CS-08 (additive)
+  /** ALL_ITEMS_FAILED | ITEM_ERRORS | CANCELLED_BY_CLIENT | LEASE_EXPIRED | INPUT_NOT_PERSISTED | WORKER_ERROR */
+  errorCode?: string | null;
+  /** A cancellation was requested and is being applied (status stays PENDING/PROCESSING until the worker stops). */
+  cancelRequested?: boolean;
+  /** Paginated per-address results (`getJobResults`). */
+  resultsUrl?: string | null;
+  policyVersion?: string | null;
+  scoreVersion?: string | null;
+}
+
+/** CS-08: one stored per-address item of an async job (input order). */
+export interface ScreeningJobItem {
+  index: number;
+  address: string;
+  chain: string;
+  /** SCREENED | ERROR (treat unknown values as not screened) */
+  status: "SCREENED" | "ERROR" | (string & {});
+  evaluationId?: string | null;
+  riskLevel?: RiskLevel | (string & {}) | null;
+  /** null = UNKNOWN / not screened (never a 0 placeholder) */
+  riskScore?: number | null;
+  sanctionsMatch?: boolean | null;
+  /** The full ScreeningResponse as served, when stored. */
+  result?: ScreeningResponse | null;
+  /** Validation code (UNKNOWN_CHAIN, INVALID_CHECKSUM, …) or SCREENING_ERROR for ERROR items. */
+  errorCode?: string | null;
+  createdAt?: string | null;
 }
 
 /** Options for `screenBulkAsync`. */
@@ -399,12 +425,16 @@ export interface AsyncSubmitOptions {
   idempotencyKey?: string;
 }
 
-/** CS-08: one page (0-based) of an async job's per-address results. */
+/** CS-08: one page (0-based) of an async job's stored items (`GET /api/v1/screen/jobs/{id}/results`). */
 export interface ScreeningJobResultsPage {
-  items: ScreeningResponse[];
+  jobId?: string | null;
+  /** Job status at read time. */
+  status?: ScreeningJobStatus | (string & {}) | null;
+  items: ScreeningJobItem[];
   page: number;
   size: number;
-  totalElements: number;
+  /** Items stored so far. */
+  totalItems: number;
   totalPages: number;
 }
 

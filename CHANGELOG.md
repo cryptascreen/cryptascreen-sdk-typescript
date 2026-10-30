@@ -12,9 +12,12 @@ against a scanned backend route table (`tests/path-table.test.ts`, fixture `test
   `screening.listEvaluations(chain, address, { page, size })` → `GET /api/v1/screen/address/{chain}/{address}/evaluations`;
   `screening.getHistory(chain, address)` → `GET /api/v1/screen/address/{chain}/{address}/history`.
   Types `ScreeningEvaluation`, `ScreeningEvaluationPage`.
-- Async jobs: status enum adds `CANCELLING` / `CANCELLED`; `isTerminalJobStatus`, `TERMINAL_JOB_STATUSES`;
-  `screening.getJobResults(jobId, { page, size })` → `GET /api/v1/screen/jobs/{id}/results?page=&size=`;
-  `screening.cancelJob(jobId)` → `POST /api/v1/screen/jobs/{id}/cancel` (both added by the CS-08 backend half).
+- Async jobs: status enum adds `CANCELLED`; `ScreeningJob.errorCode`, `cancelRequested`, `resultsUrl`,
+  `policyVersion`, `scoreVersion`; `isTerminalJobStatus`, `TERMINAL_JOB_STATUSES`;
+  `screening.getJobResults(jobId, { page, size })` → `GET /api/v1/screen/jobs/{id}/results?page=&size=` returning
+  `ScreeningJobResultsPage {jobId, status, page, size, totalItems, totalPages, items: ScreeningJobItem[]}`;
+  `screening.cancelJob(jobId)` → `POST /api/v1/screen/jobs/{id}/cancel` (202; 409 `JOB_ALREADY_TERMINAL`). Both routes
+  are added by the CS-08 backend half.
 - `screenBulkAsync(request, { idempotencyKey })`: an `Idempotency-Key` header is always sent (generated when not
   supplied), so the SDK's own 429/5xx retries reuse the same key. `screenBulkAndWait` accepts the same option and also
   stops on `CANCELLED`.

@@ -6,6 +6,7 @@ import type {
   ScreeningJob,
   AsyncSubmitOptions,
   ScreeningJobResultsPage,
+  ScreeningJobItem,
   PageOptions,
   ScreeningEvaluation,
   ScreeningEvaluationPage,
@@ -74,8 +75,8 @@ export class ScreeningEndpoints {
   }
 
   /**
-   * CS-08: one page (0-based) of a job's per-address results. Accepts the server's `items` or a Spring-style
-   * `content` array.
+   * CS-08: one page (0-based, size 1..1000) of a job's stored per-address items, input order.
+   * Body: {jobId, status, page, size, totalItems, totalPages, items[]}; a Spring-style `content` page is also accepted.
    */
   async getJobResults(jobId: string, options: PageOptions = {}): Promise<ScreeningJobResultsPage> {
     const page = options.page ?? 0;
@@ -85,17 +86,23 @@ export class ScreeningEndpoints {
       { params: { page, size } },
     );
     const d = data ?? {};
-    const items = (Array.isArray(d.items) ? d.items : Array.isArray(d.content) ? d.content : []) as ScreeningResponse[];
+    const items = (Array.isArray(d.items) ? d.items : Array.isArray(d.content) ? d.content : []) as ScreeningJobItem[];
+    const num = (...vals: unknown[]) => vals.find((v): v is number => typeof v === "number");
     return {
+      jobId: typeof d.jobId === "string" ? d.jobId : jobId,
+      status: typeof d.status === "string" ? d.status : null,
       items,
-      page: typeof d.page === "number" ? d.page : typeof d.number === "number" ? d.number : page,
-      size: typeof d.size === "number" ? d.size : size,
-      totalElements: typeof d.totalElements === "number" ? d.totalElements : items.length,
-      totalPages: typeof d.totalPages === "number" ? d.totalPages : 1,
+      page: num(d.page, d.number) ?? page,
+      size: num(d.size) ?? size,
+      totalItems: num(d.totalItems, d.totalElements) ?? items.length,
+      totalPages: num(d.totalPages) ?? 1,
     };
   }
 
-  /** CS-08: request cancellation of a PENDING/PROCESSING job. Returns the job as the server now reports it. */
+  /**
+   * CS-08: request cancellation of a PENDING/PROCESSING job (202 with the job; CANCELLED at once when it had not
+   * started, otherwise `cancelRequested=true`). A finished job yields 409 JOB_ALREADY_TERMINAL (CryptaScreenError).
+   */
   async cancelJob(jobId: string): Promise<ScreeningJob> {
     const { data } = await this.http.post<ScreeningJob>(`/api/v1/screen/jobs/${enc(jobId)}/cancel`);
     return data;
