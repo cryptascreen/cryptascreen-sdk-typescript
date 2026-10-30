@@ -49,12 +49,22 @@ console.log(job.results);
 ### Screening
 
 ```typescript
-client.screening.screenAddress({ address, chain, fresh? })
-client.screening.screenBulk({ addresses, fresh? })
-client.screening.screenBulkAsync({ addresses, fresh? })
-client.screening.pollJob(jobId)
-client.screening.screenBulkAndWait(request, pollIntervalMs?, timeoutMs?)
+client.screening.screenAddress({ address, chain, includeHeuristics?, forceRefresh?, mode? })
+client.screening.screenBulk({ addresses, chains })                       // sync, max 1000
+client.screening.screenBulkAsync({ addresses, chains }, { idempotencyKey? }) // async job, max 10000; Idempotency-Key always sent
+client.screening.pollJob(jobId)                                           // status: PENDING|PROCESSING|COMPLETED|PARTIAL|FAILED|CANCELLING|CANCELLED
+client.screening.getJobResults(jobId, { page?, size? })                   // per-address results, 0-based pages
+client.screening.cancelJob(jobId)
+client.screening.listJobs()
+client.screening.screenBulkAndWait(request, pollIntervalMs?, timeoutMs?, { idempotencyKey? })
+client.screening.getHistory(chain, address)                               // last stored result
+client.screening.listEvaluations(chain, address, { page?, size? })        // append-only evaluation history (newest first)
+client.screening.getEvaluation(evaluationId)                              // ScreeningResponse.evaluationId
 ```
+
+`riskScore` is `null` whenever `riskLevel` is `UNKNOWN` (chain not analyzed, or the mandatory sanctions layer
+incomplete) — never treat it as 0. Every response carries `evidenceVersion` + `validity` (which data produced it and
+how old it is) and `evaluationId` (the append-only record). Unknown status values must be treated as not complete.
 
 ### Sanctions
 
@@ -86,17 +96,18 @@ client.cases.escalate(caseId, { reason, assigneeId? })
 ### Compliance
 
 ```typescript
-client.compliance.checkTravelRule(request)
-client.compliance.buildTravelRulePayload(request)
-client.compliance.generateDac8Report({ periodStart, periodEnd, jurisdiction, addresses })
-client.compliance.identifyVasp({ name?, lei?, jurisdiction? })
+client.compliance.checkTravelRule({ chain, fromAddress, toAddress, transferAmountUsd, txHash? })
+client.compliance.buildTravelRulePayload({ chain, originatorWalletAddress, transferAmountUsd, ... }) // draft, not transmitted
+client.compliance.identifyVasp(chain, address)
+client.compliance.generateDac8Report({ taxYear, jurisdiction, operator, users }) // @deprecated: DAC8 is deferred, output is an unvalidated draft
 ```
 
 ### Intelligence
 
 ```typescript
-client.intelligence.getEntityLabel(address, chain)
-client.intelligence.getVaspInfo(vaspId)
+client.intelligence.getEntityLabels(chain, address)   // all attributions (empty = no label known, not a clean verdict)
+client.intelligence.getEntityLabel(address, chain)    // @deprecated: first label or null
+// getVaspInfo was removed from the API surface (no backend route); it throws ENDPOINT_NOT_AVAILABLE
 ```
 
 ### Webhooks

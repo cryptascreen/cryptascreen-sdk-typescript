@@ -43,7 +43,7 @@ export class CasesEndpoints {
 
   /** Update the status of a case */
   async updateStatus(caseId: string, request: UpdateCaseStatusRequest): Promise<InvestigationCase> {
-    const { data } = await this.http.patch<InvestigationCase>(
+    const { data } = await this.http.put<InvestigationCase>(
       `/api/v1/cases/${caseId}/status`,
       request,
     );

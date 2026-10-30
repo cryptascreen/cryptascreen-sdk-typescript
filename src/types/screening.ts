@@ -201,6 +201,131 @@ export interface ScreeningResponse {
   checkedLayers?: string[] | null;
   layers?: ScreeningLayers | null;
   review?: ReviewStatus | null;
+  // CS-03 (additive)
+  /**
+   * Fingerprint of the validity vector (source snapshot / data versions, tenant policy, policy + score version,
+   * chain provider, entitlements) this result was computed under. Same value = same data produced the result.
+   */
+  evidenceVersion?: string | null;
+  /** Versions, cache decision, result age and per-source age. */
+  validity?: ResultValidity | null;
+  // CS-04 (additive)
+  /**
+   * Id of the append-only evaluation that recorded this decision (`screening.getEvaluation(id)`). On the history
+   * endpoint: the newest evaluation for the address. Null only for results stored before V5 without a backfill.
+   */
+  evaluationId?: string | null;
+}
+
+/** CS-03 cache decision of one result. Unknown future values may appear. */
+export type CacheDecision =
+  | "HIT"
+  | "MISS"
+  | "FORCE_REFRESH"
+  | "FINDINGS_PRESENT"
+  | "STALE_VERSION"
+  | "SCOPE_MISMATCH"
+  | "SAFETY_TTL_EXPIRED"
+  | "NOT_REUSABLE"
+  | "VERSION_UNKNOWN";
+
+/** CS-03: which data produced a result and how old it is (backend `ResultValidity`). */
+export interface ResultValidity {
+  evidenceVersion: string;
+  cacheDecision: CacheDecision | (string & {});
+  /** fast | full (part of the cache scope) */
+  mode: string;
+  includeHeuristics: boolean;
+  addressEvidenceVersion: number;
+  entityLabelVersion: number;
+  /** Active snapshot version per registry source at evaluation time (null = none). */
+  sourceSnapshotVersions?: Record<string, number | null> | null;
+  tenantPolicyVersion: number;
+  policyVersion?: string | null;
+  scoreVersion?: string | null;
+  /** Chain provider id ("none" = unavailable). */
+  chainProvider?: string | null;
+  entitlements?: string | null;
+  computedAt?: string | null;
+  /** now − computedAt (0 for a fresh evaluation). */
+  resultAgeSeconds?: number | null;
+  /** Age since the last successful refresh per required/active source. */
+  sourceAgeSeconds?: Record<string, number | null> | null;
+  /** Max over the fetch-enabled sources (null if none). */
+  oldestRequiredSourceAgeSeconds?: number | null;
+  /** POSTGRES | REDIS_COMPLETE_SET | POSTGRES_FALLBACK:<reason> */
+  tier0Lookup?: string | null;
+}
+
+/** CS-04: one append-only evaluation (`GET /api/v1/screen/evaluations/{id}`). */
+export interface ScreeningEvaluation {
+  evaluationId: string;
+  /** Set when the evaluation was produced by an async bulk job. */
+  jobId?: string | null;
+  origin?: string | null;
+  actor?: { type?: string | null; id?: string | null } | null;
+  /** Canonical input; address fields are null after an erasure redaction. */
+  input?: {
+    chain?: string | null;
+    address?: string | null;
+    addressNormalized?: string | null;
+    rawAddress?: string | null;
+    rawChain?: string | null;
+    mode?: string | null;
+    includeHeuristics?: boolean;
+    forceRefresh?: boolean;
+  } | null;
+  evaluatedAt: string;
+  /** null = UNKNOWN (not determined); never a 0 placeholder. */
+  riskScore: number | null;
+  riskLevel: RiskLevel | (string & {});
+  assessmentStatus?: AssessmentStatus | (string & {}) | null;
+  disposition?: Disposition | (string & {}) | null;
+  coverage?: Coverage | (string & {}) | null;
+  sanctionsMatch: boolean;
+  blockingMatch: boolean;
+  cacheHit: boolean;
+  policyVersion?: string | null;
+  scoreVersion?: string | null;
+  scope?: {
+    layers?: unknown;
+    checkedLayers?: unknown;
+    heuristicsStatus?: string | null;
+    heuristicsDetectors?: unknown;
+    providerId?: string | null;
+    providerVersion?: string | null;
+    detectorVersions?: unknown;
+  } | null;
+  evidence?: unknown;
+  /** The ScreeningResponse exactly as served (null once redacted). */
+  result?: ScreeningResponse | null;
+  supersession?: { supersedesEvaluationId?: string | null; supersededByEvaluationId?: string | null } | null;
+  latest: boolean;
+  /** evidenceHash = SHA-256 over evidencePayload; verified is recomputed on read (null after redaction). */
+  integrity?: {
+    evidenceHash?: string | null;
+    algorithm?: string | null;
+    verified?: boolean | null;
+    payloadSchema?: string | null;
+    evidencePayload?: string | null;
+  } | null;
+  retention?: {
+    retentionClass?: string | null;
+    retainUntil?: string | null;
+    redacted: boolean;
+    redactedAt?: string | null;
+    redactionReason?: string | null;
+  } | null;
+}
+
+/** CS-04: newest-first page of evaluations for one address. */
+export interface ScreeningEvaluationPage {
+  items: ScreeningEvaluation[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  latestEvaluationId?: string | null;
 }
 
 /** Back-compat alias — a single screening verdict. */
@@ -230,7 +355,18 @@ export type ScreeningJobStatus =
   | "PROCESSING"
   | "COMPLETED"
   | "PARTIAL"
-  | "FAILED";
+  | "FAILED"
+  /** CS-08: cancel requested, workers stopping */
+  | "CANCELLING"
+  /** CS-08: terminal — cancelled before completion; processed items keep their results */
+  | "CANCELLED";
+
+/** Terminal job statuses (polling stops). Unknown future values are NOT terminal. */
+export const TERMINAL_JOB_STATUSES: readonly ScreeningJobStatus[] = ["COMPLETED", "PARTIAL", "FAILED", "CANCELLED"];
+
+export function isTerminalJobStatus(status: string | null | undefined): boolean {
+  return (TERMINAL_JOB_STATUSES as readonly string[]).includes(status ?? "");
+}
 
 export interface ScreeningJobSummary {
   highRiskAddresses: string[];
@@ -240,7 +376,8 @@ export interface ScreeningJobSummary {
 
 export interface ScreeningJob {
   jobId: string;
-  status: ScreeningJobStatus;
+  /** Unknown future values must be treated as non-terminal and not successful. */
+  status: ScreeningJobStatus | (string & {});
   total: number;
   processed: number;
   succeeded: number;
@@ -251,6 +388,30 @@ export interface ScreeningJob {
   createdAt: string;
   startedAt?: string | null;
   completedAt?: string | null;
+}
+
+/** Options for `screenBulkAsync`. */
+export interface AsyncSubmitOptions {
+  /**
+   * Sent as the `Idempotency-Key` header. Re-submitting with the same key returns the original job instead of
+   * creating a second one. When omitted the SDK generates one per call, so its own 429/5xx retries are safe.
+   */
+  idempotencyKey?: string;
+}
+
+/** CS-08: one page (0-based) of an async job's per-address results. */
+export interface ScreeningJobResultsPage {
+  items: ScreeningResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface PageOptions {
+  /** 0-based page index (default 0). */
+  page?: number;
+  size?: number;
 }
 
 /** Narrowing helpers (null-safe). */

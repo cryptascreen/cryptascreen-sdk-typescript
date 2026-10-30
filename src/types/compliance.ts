@@ -1,84 +1,111 @@
+// Mirrors backend com.cryptascreen.travelrule.dto.* / travelrule.TravelRuleCheckResult / TravelRulePayload and
+// com.cryptascreen.dac8.dto.*. Travel Rule and DAC8 are CS-09 scope: payload builders are NOT regulatory filing.
+
+/** Backend TravelRuleCheckRequest. */
 export interface TravelRuleCheckRequest {
-  originatorVaspId: string;
-  beneficiaryVaspId: string;
-  originatorAddress: string;
-  beneficiaryAddress: string;
+  txHash?: string;
   chain: string;
-  amount: number;
-  asset: string;
-  originatorName?: string;
-  beneficiaryName?: string;
+  fromAddress: string;
+  toAddress: string;
+  /** USD value of the transfer (threshold logic is server-side). */
+  transferAmountUsd: number;
 }
 
+/** Backend TravelRuleCheckResult. */
 export interface TravelRuleCheckResult {
-  id: string;
-  status: "COMPLIANT" | "NON_COMPLIANT" | "PENDING" | "NOT_APPLICABLE";
-  requiredFields: string[];
-  missingFields: string[];
-  jurisdiction: string;
-  thresholdExceeded: boolean;
-  threshold: number;
-  thresholdCurrency: string;
-  checkedAt: string;
-}
-
-export interface TravelRulePayload {
-  originatorVasp: VaspIdentification;
-  beneficiaryVasp: VaspIdentification;
-  originator: {
-    name?: string;
-    address?: string;
-    accountNumber?: string;
-  };
-  beneficiary: {
-    name?: string;
-    address?: string;
-    accountNumber?: string;
-  };
-  amount: number;
-  asset: string;
+  txHash?: string | null;
   chain: string;
+  required: boolean;
+  thresholdExceeded: boolean;
+  thresholdUsd?: number | null;
+  originatorVaspIdentified: boolean;
+  originatorVaspName?: string | null;
+  beneficiaryVaspIdentified: boolean;
+  beneficiaryVaspName?: string | null;
+  travelRuleProtocol?: string | null;
 }
 
+/** Backend TravelRulePayloadRequest. */
+export interface TravelRulePayloadRequest {
+  txHash?: string;
+  chain: string;
+  originatorName?: string;
+  originatorFirstName?: string;
+  originatorLastName?: string;
+  originatorWalletAddress: string;
+  originatorVaspName?: string;
+  transferAmountUsd: number;
+}
+
+/** Backend TravelRulePayload (IVMS101-shaped draft; transmission is out of scope). */
+export interface TravelRulePayload {
+  originatorName?: string | null;
+  originatorAccount?: string | null;
+  originatorVasp?: string | null;
+  transferAmount?: number | null;
+  currency?: string | null;
+  txHash?: string | null;
+  chain?: string | null;
+  timestamp?: string | null;
+  ivms101?: Record<string, unknown> | null;
+}
+
+/** GET /api/v1/compliance/travel-rule/vasp/identify/{chain}/{address} (snake_case keys as served). */
 export interface VaspIdentification {
-  vaspId: string;
+  identified: boolean;
+  vasp_name?: string | null;
+  jurisdiction?: string | null;
+  mica_registered?: boolean | null;
+  travel_rule_protocol?: string | null;
+}
+
+/** Backend Dac8OperatorInfo (reporting crypto-asset service provider). */
+export interface Dac8OperatorInfo {
   name: string;
-  lei?: string;
-  jurisdiction: string;
+  tin: string;
+  tinIssuedBy?: string;
   registrationNumber?: string;
-  website?: string;
-  travelRuleProtocols: string[];
-  verified: boolean;
+  address?: string;
+  country: string;
 }
 
+/** Backend Dac8TransactionData. */
+export interface Dac8TransactionData {
+  txHash?: string;
+  chain?: string;
+  /** ISO date (yyyy-mm-dd). */
+  transactionDate: string;
+  transactionType: string;
+  cryptoAsset: string;
+  units: number;
+  fmvAtTransaction?: number;
+}
+
+/** Backend Dac8UserData (reportable user). */
+export interface Dac8UserData {
+  userId: string;
+  firstName?: string;
+  lastName?: string;
+  entityName?: string;
+  tin?: string;
+  residenceCountry: string;
+  transactions?: Dac8TransactionData[];
+}
+
+/** Backend Dac8ReportRequest — taxYear, jurisdiction, operator and users are required. */
 export interface Dac8ReportRequest {
-  /** Tax reporting period start (ISO 8601) */
-  periodStart: string;
-  /** Tax reporting period end (ISO 8601) */
-  periodEnd: string;
-  /** Jurisdiction code (ISO 3166-1 alpha-2) */
+  taxYear: number;
+  /** ISO 3166-1 alpha-2 */
   jurisdiction: string;
-  /** Addresses to include in the report */
-  addresses: Array<{
-    address: string;
-    chain: string;
-  }>;
+  operator: Dac8OperatorInfo;
+  users: Dac8UserData[];
 }
 
+/** Backend Dac8ReportGenerationResult. */
 export interface Dac8ReportResult {
-  id: string;
-  status: "GENERATING" | "READY" | "FAILED";
-  periodStart: string;
-  periodEnd: string;
-  jurisdiction: string;
-  reportUrl?: string;
+  reportId: string;
   transactionCount: number;
-  totalVolume: number;
-  generatedAt?: string;
-}
-
-export interface VaspLookupRequest {
-  name?: string;
-  lei?: string;
-  jurisdiction?: string;
+  generatedAt?: string | null;
+  status: string;
+  xmlPreview?: string | null;
 }

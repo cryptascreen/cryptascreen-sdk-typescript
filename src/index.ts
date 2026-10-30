@@ -45,8 +45,21 @@ export type {
   ScreeningLayer,
   ScreeningLayers,
   ReviewStatus,
+  CacheDecision,
+  ResultValidity,
+  ScreeningEvaluation,
+  ScreeningEvaluationPage,
+  AsyncSubmitOptions,
+  ScreeningJobResultsPage,
+  PageOptions,
 } from "./types/screening.js";
-export { isAssessed, sanctionsLayerComplete } from "./types/screening.js";
+export {
+  isAssessed,
+  sanctionsLayerComplete,
+  isTerminalJobStatus,
+  TERMINAL_JOB_STATUSES,
+} from "./types/screening.js";
+export { generateIdempotencyKey } from "./endpoints/screening.js";
 
 // Types - Sanctions
 export type {
@@ -62,8 +75,12 @@ export type {
   GraphNode,
   GraphEdge,
   GraphStats,
+  GraphStatus,
+  GraphScope,
+  GraphScopeStatus,
   GraphExportFormat,
 } from "./types/graph.js";
+export { isGraphComplete } from "./types/graph.js";
 
 // Types - Cases
 export type {
@@ -86,10 +103,13 @@ export type {
   TravelRuleCheckRequest,
   TravelRuleCheckResult,
   TravelRulePayload,
+  TravelRulePayloadRequest,
   VaspIdentification,
   Dac8ReportRequest,
   Dac8ReportResult,
-  VaspLookupRequest,
+  Dac8OperatorInfo,
+  Dac8UserData,
+  Dac8TransactionData,
 } from "./types/compliance.js";
 
 // Types - Webhooks
