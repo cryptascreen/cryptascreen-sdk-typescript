@@ -55,16 +55,31 @@ export class NotFoundError extends CryptaScreenError {
   }
 }
 
+export interface ValidationItem {
+  index: number;
+  field: string;
+  code: string;
+  message: string;
+}
+
 export class ValidationError extends CryptaScreenError {
   public readonly fieldErrors: Record<string, string[]>;
+  /** CS-02 machine code, e.g. UNKNOWN_CHAIN, INVALID_ADDRESS_FORMAT, INVALID_CHECKSUM, INVALID_BULK_ITEMS. */
+  public readonly validationCode?: string;
+  /** CS-02 bulk: every invalid item (the whole request was rejected). */
+  public readonly items: ValidationItem[];
 
   constructor(
     message: string,
     fieldErrors: Record<string, string[]> = {},
     requestId?: string,
+    validationCode?: string,
+    items: ValidationItem[] = [],
   ) {
-    super(message, 400, "VALIDATION_ERROR", requestId, { fieldErrors });
+    super(message, 400, "VALIDATION_ERROR", requestId, { fieldErrors, validationCode, items });
     this.name = "ValidationError";
     this.fieldErrors = fieldErrors;
+    this.validationCode = validationCode;
+    this.items = items;
   }
 }

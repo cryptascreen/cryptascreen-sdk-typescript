@@ -7,6 +7,7 @@ import {
   NotFoundError,
   ValidationError,
 } from "./errors.js";
+import type { ValidationItem } from "./errors.js";
 import { ScreeningEndpoints } from "./endpoints/screening.js";
 import { SanctionsEndpoints } from "./endpoints/sanctions.js";
 import { GraphEndpoints } from "./endpoints/graph.js";
@@ -122,8 +123,18 @@ export class CryptaScreenClient {
         );
 
       case 400: {
-        const fieldErrors = (body?.fieldErrors as Record<string, string[]>) ?? {};
-        return new ValidationError(message, fieldErrors, requestId);
+        const fieldErrors: Record<string, string[]> = {
+          ...((body?.fieldErrors as Record<string, string[]>) ?? {}),
+        };
+        // CS-02 backend shape: { error, code, field, message, items? }
+        const field = body?.field as string | undefined;
+        if (field) fieldErrors[field] = [...(fieldErrors[field] ?? []), message];
+        const items = (body?.items as ValidationItem[] | undefined) ?? [];
+        for (const it of items) {
+          const key = `${it.field}[${it.index}]`;
+          fieldErrors[key] = [...(fieldErrors[key] ?? []), it.message];
+        }
+        return new ValidationError(message, fieldErrors, requestId, body?.code as string | undefined, items);
       }
 
       case 429: {

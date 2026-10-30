@@ -9,6 +9,7 @@ export {
   NotFoundError,
   ValidationError,
 } from "./errors.js";
+export type { ValidationItem } from "./errors.js";
 
 // Types - Common
 export type {
@@ -31,7 +32,21 @@ export type {
   ScreeningJobStatus,
   ScreeningJobSummary,
   ScreeningJob,
+  HeuristicsStatus,
+  DetectorOutcome,
+  HeuristicDetectorStatus,
+  PolicyVersion,
+  LayerState,
+  AssessmentStatus,
+  Disposition,
+  MatchState,
+  FindingCategory,
+  SourceFreshness,
+  ScreeningLayer,
+  ScreeningLayers,
+  ReviewStatus,
 } from "./types/screening.js";
+export { isAssessed, sanctionsLayerComplete } from "./types/screening.js";
 
 // Types - Sanctions
 export type {
