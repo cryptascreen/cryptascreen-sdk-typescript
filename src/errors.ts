@@ -71,12 +71,18 @@ export class QuotaExceededError extends CryptaScreenError {
 export class ServicePausedError extends CryptaScreenError {
   public readonly subscriptionStatus?: string;
   public readonly billingUrl?: string;
+  /**
+   * Billing port (owner decision 8): why the plan is blocked — the subscription state (PAST_DUE, PAUSED, ...) or
+   * PERIOD_NOT_PAID (the current month of a paid plan has no paid invoice). The plan is never downgraded.
+   */
+  public readonly reason?: string;
 
-  constructor(message: string, requestId?: string, subscriptionStatus?: string, billingUrl?: string) {
-    super(message, 402, "SERVICE_PAUSED", requestId, { subscriptionStatus, billingUrl });
+  constructor(message: string, requestId?: string, subscriptionStatus?: string, billingUrl?: string, reason?: string) {
+    super(message, 402, "SERVICE_PAUSED", requestId, { subscriptionStatus, billingUrl, reason });
     this.name = "ServicePausedError";
     this.subscriptionStatus = subscriptionStatus;
     this.billingUrl = billingUrl;
+    this.reason = reason;
   }
 }
 

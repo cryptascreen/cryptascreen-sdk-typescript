@@ -125,3 +125,22 @@ describe("w2-billing plan-limit errors", () => {
     expect(err.status).toBe(403);
   });
 });
+
+describe("billing port: unpaid month (402 SERVICE_PAUSED reason PERIOD_NOT_PAID)", () => {
+  it("carries reason and subscriptionStatus, is not retried", async () => {
+    mock.onPost("/api/v1/screen/address").reply(402, {
+      error: "service_paused",
+      code: "SERVICE_PAUSED",
+      subscriptionStatus: "ACTIVE",
+      reason: "PERIOD_NOT_PAID",
+      message: "This month of your plan has not been paid.",
+      billing_url: "/settings/billing",
+    });
+    const err = await client.screening.screenAddress({ address: ADDR, chain: "ethereum" }).catch((e) => e);
+    expect(err).toBeInstanceOf(ServicePausedError);
+    expect(err.reason).toBe("PERIOD_NOT_PAID");
+    expect(err.subscriptionStatus).toBe("ACTIVE");
+    expect(err.billingUrl).toBe("/settings/billing");
+    expect(mock.history.post.length).toBe(1);
+  });
+});

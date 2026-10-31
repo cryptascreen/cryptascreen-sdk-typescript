@@ -170,6 +170,7 @@ export class CryptaScreenClient {
             requestId,
             body?.subscriptionStatus as string | undefined,
             body?.billing_url as string | undefined,
+            body?.reason as string | undefined,
           );
         }
         return new CryptaScreenError(message, 402, (body?.code as string) ?? "PAYMENT_REQUIRED", requestId, body);
