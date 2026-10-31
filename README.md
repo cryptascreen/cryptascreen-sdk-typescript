@@ -2,46 +2,39 @@
 
 Type-safe TypeScript client for the CryptaScreen REST API.
 
+REST API (API key or browser session) and a TypeScript SDK (pre-release).
+
 ## Installation
 
-```bash
-npm install @cryptascreen/sdk
-```
+Pre-release: install from the repository. Set `baseUrl` to the authorised test environment you were given.
 
 ## Quick Start
 
 ```typescript
 import { CryptaScreenClient } from "@cryptascreen/sdk";
 
-const client = new CryptaScreenClient({
-  apiKey: "csk_live_your_api_key_here",
-  // baseUrl: "https://api.cryptascreen.com", // default
-});
+// A synthetic, syntactically valid test address (never a real customer or mainnet address in examples).
+const SYNTHETIC_ADDRESS = "0x5eed000000000000000000000000000000c50101";
 
-// Screen a single address
-const result = await client.screening.screenAddress({
-  address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
-  chain: "ethereum",
-});
+const client = new CryptaScreenClient({ apiKey: process.env.CRYPTASCREEN_API_KEY!, baseUrl: process.env.CRYPTASCREEN_BASE_URL! });
+const result = await client.screening.screenAddress({ address: SYNTHETIC_ADDRESS, chain: "ethereum" });
+console.log(result.riskLevel);       // "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN"
+console.log(result.riskScore);       // number, or null when UNKNOWN
+console.log(result.sanctionsMatch);  // boolean
+const bulk = await client.screening.screenBulk({ addresses: [A1, A2], chains: ["ethereum", "ethereum"] }); // ScreeningResponse[]
+const job = await client.screening.screenBulkAsync({ addresses, chains });
+const page = await client.screening.getJobResults(job.jobId, { page: 0, size: 100 });
+```
 
-console.log(result.riskLevel); // "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
-console.log(result.sanctioned); // false
-console.log(result.flags); // []
+The same request over plain HTTP (to be run against the authorised synthetic environment; the address is a placeholder
+for a documented synthetic EIP-55 address):
 
-// Bulk screening (sync)
-const bulk = await client.screening.screenBulk({
-  addresses: [
-    { address: "0xaaa...", chain: "ethereum" },
-    { address: "0xbbb...", chain: "ethereum" },
-  ],
-});
-console.log(`Screened: ${bulk.totalScreened}, Flagged: ${bulk.totalFlagged}`);
-
-// Bulk screening (async with polling)
-const job = await client.screening.screenBulkAndWait({
-  addresses: largeAddressList,
-});
-console.log(job.results);
+```bash
+curl -X POST "$CRYPTASCREEN_BASE_URL/api/v1/screen/address" \
+  -H "X-API-Key: $CRYPTASCREEN_API_KEY" -H "Content-Type: application/json" \
+  -d '{"address":"<synthetic EIP-55 address>","chain":"ethereum"}'
+# → { "chain": "ethereum", "riskLevel": "...", "riskScore": <0-100 or null>, "sanctionsMatch": <bool>,
+#     "assessmentStatus": "...", "layers": { ... }, "evaluationId": "..." }
 ```
 
 ## API Reference
@@ -50,8 +43,8 @@ console.log(job.results);
 
 ```typescript
 client.screening.screenAddress({ address, chain, includeHeuristics?, forceRefresh?, mode? })
-client.screening.screenBulk({ addresses, chains })                       // sync, max 1000
-client.screening.screenBulkAsync({ addresses, chains }, { idempotencyKey? }) // async job, max 10000; Idempotency-Key always sent
+client.screening.screenBulk({ addresses, chains })                       // sync; addresses per request capped by your plan
+client.screening.screenBulkAsync({ addresses, chains }, { idempotencyKey? }) // async job; addresses per job capped by your plan; Idempotency-Key always sent
 client.screening.pollJob(jobId)                                           // status: PENDING|PROCESSING|COMPLETED|PARTIAL|FAILED|CANCELLED (+ cancelRequested)
 client.screening.getJobResults(jobId, { page?, size? })                   // stored per-address items, 0-based pages
 client.screening.cancelJob(jobId)
@@ -65,6 +58,14 @@ client.screening.getEvaluation(evaluationId)                              // Scr
 `riskScore` is `null` whenever `riskLevel` is `UNKNOWN` (chain not analyzed, or the mandatory sanctions layer
 incomplete) — never treat it as 0. Every response carries `evidenceVersion` + `validity` (which data produced it and
 how old it is) and `evaluationId` (the append-only record). Unknown status values must be treated as not complete.
+
+Every result lists each layer (sanctions, threat intelligence, entity attribution, on-chain analysis) and whether it was complete, partial, unavailable or not configured. If a required layer was not checked, the result is UNKNOWN with no score, never a clean verdict. 'No match' means no match in the layers listed as checked.
+
+If you omit `chain`, CryptaScreen screens the address on Ethereum (`chain=ethereum`) and every such response states `"chain": "ethereum"`. This default exists only for compatibility. An EVM address does not identify its network, so always send `chain` explicitly.
+
+Addresses are validated for the stated network. Malformed addresses, bad checksums and unknown networks are rejected and not counted against your quota.
+
+Bulk and asynchronous job sizes are capped per plan (see your plan in the app). Resubmitting with the same Idempotency-Key does not create or bill a second job.
 
 ### Sanctions
 
@@ -96,11 +97,13 @@ client.cases.escalate(caseId, { reason, assigneeId? })
 ### Compliance
 
 ```typescript
-client.compliance.checkTravelRule({ chain, fromAddress, toAddress, transferAmountUsd, txHash? })
+client.compliance.checkTravelRule({ chain, fromAddress, toAddress, transferAmountUsd, txHash? }) // threshold logic not validated (CS-09 deferred)
 client.compliance.buildTravelRulePayload({ chain, originatorWalletAddress, transferAmountUsd, ... }) // draft, not transmitted
 client.compliance.identifyVasp(chain, address)
 client.compliance.generateDac8Report({ taxYear, jurisdiction, operator, users }) // @deprecated: DAC8 is deferred, output is an unvalidated draft
 ```
+
+`mica_registered` comes from an internal seed table, not from an official register. Do not rely on it.
 
 ### Intelligence
 
@@ -119,6 +122,8 @@ client.webhooks.delete(webhookId)
 client.webhooks.test(webhookId)
 client.webhooks.getDeliveries(webhookId, { page?, pageSize? })
 ```
+
+Webhook events: SANCTIONS_MATCH, CRITICAL, HIGH_RISK, HEURISTICS_COMPLETE, TEST.
 
 ## Error Handling
 
@@ -159,11 +164,15 @@ try {
 ```typescript
 const client = new CryptaScreenClient({
   apiKey: "csk_live_...",        // Required
-  baseUrl: "https://...",        // Default: "https://api.cryptascreen.com"
+  baseUrl: "https://...",        // Set it to the authorised test environment you were given
   timeout: 30000,                // Default: 30s
   retries: 3,                    // Default: 3 (retries on 429/5xx with exponential backoff)
 });
 ```
+
+## Support
+
+Support: in-app or support@cryptacount.com.
 
 ## License
 

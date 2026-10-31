@@ -34,13 +34,24 @@ against a scanned backend route table (`tests/path-table.test.ts`, fixture `test
 - `compliance.identifyVasp(chain, address)` → `GET /api/v1/compliance/travel-rule/vasp/identify/{chain}/{address}`
   (was `POST /api/v1/compliance/vasp/identify` with a name/LEI body — no backend route). `VaspIdentification` now has
   the served keys `identified`, `vasp_name`, `jurisdiction`, `mica_registered`, `travel_rule_protocol`.
-  `VaspLookupRequest` removed.
+  `VaspLookupRequest` removed. `mica_registered` comes from an internal seed table, not from an official register. Do
+  not rely on it.
 - Travel Rule request/response types match the backend DTOs (`TravelRuleCheckRequest {txHash?, chain, fromAddress,
   toAddress, transferAmountUsd}`, new `TravelRulePayloadRequest`, `TravelRuleCheckResult`, `TravelRulePayload`).
 - `intelligence.getEntityLabel(address, chain)` now reads `/intelligence/entity/{chain}/{address}` and returns the
   first label or `null` (was the unmapped `/intelligence/label/{chain}/{address}`); `EntityLabel` matches the backend
   entity. Deprecated in favour of `getEntityLabels`.
 - `cases.updateStatus` uses `PUT /api/v1/cases/{ref}/status` (was `PATCH`, which the backend does not map).
+
+### Documentation (CS-10 copy decisions, owner ruling 2026-10-31n)
+- README Quick Start replaced: current types (`sanctionsMatch`, `riskLevel` incl. `MINIMAL`/`UNKNOWN`, nullable
+  `riskScore`), `screenBulk({ addresses, chains })` returning `ScreeningResponse[]`, async jobs read through
+  `getJobResults`; a synthetic example address instead of a real mainnet address.
+- Installation: pre-release, install from the repository; `baseUrl` must be set to the authorised test environment (the
+  README no longer states a public default host or an npm install).
+- Added the per-layer result statement, the omitted-`chain` default, address validation, plan-capped bulk/job sizes
+  and Idempotency-Key, the Travel Rule threshold note, the `mica_registered` caveat, the webhook event list and the
+  support contact (in-app or support@cryptacount.com).
 
 ### Deprecated
 - `compliance.generateDac8Report`: DAC8 is DEFERRED (CS-09); output is an unvalidated draft, not a filing. The
