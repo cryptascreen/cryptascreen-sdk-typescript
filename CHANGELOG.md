@@ -6,6 +6,10 @@ Aligns the SDK with the CryptaScreen backend controllers and `openapi-customer.j
 against a scanned backend route table (`tests/path-table.test.ts`, fixture `tests/fixtures/backend-routes.json`).
 
 ### Added
+- CS-08B: `QuotaExceededError` (429 `quota_exceeded`: the plan's monthly screenings are used up, with `resetsAt` /
+  `upgradeUrl`) and `ServicePausedError` (402 `SERVICE_PAUSED`: payment overdue, plan unchanged). Neither is retried —
+  a plain 429 rate limit is still retried and still a `RateLimitError`. No billing/usage methods: the backend has no
+  API-key billing endpoint (`/api/v1/screen-billing/*` is cookie-session only).
 - `ScreeningResponse.evaluationId` (CS-04), `evidenceVersion` and `validity: ResultValidity` (CS-03: versions, cache
   decision, result age, per-source age).
 - `screening.getEvaluation(id)` → `GET /api/v1/screen/evaluations/{id}`;

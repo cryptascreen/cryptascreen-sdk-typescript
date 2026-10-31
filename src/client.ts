@@ -5,6 +5,8 @@ import {
   AuthenticationError,
   RateLimitError,
   NotFoundError,
+  QuotaExceededError,
+  ServicePausedError,
   ValidationError,
 } from "./errors.js";
 import type { ValidationItem } from "./errors.js";
@@ -19,6 +21,12 @@ import { WebhookEndpoints } from "./endpoints/webhooks.js";
 const DEFAULT_BASE_URL = "https://api.cryptascreen.com";
 const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_RETRIES = 3;
+
+/** CS-08B: 429 `quota_exceeded` is the plan's monthly cap, not a rate limit. */
+function isQuotaExceeded(error: AxiosError): boolean {
+  const body = error.response?.data as Record<string, unknown> | undefined;
+  return error.response?.status === 429 && (body?.error === "quota_exceeded" || body?.code === "QUOTA_EXCEEDED");
+}
 
 export class CryptaScreenClient {
   public readonly screening: ScreeningEndpoints;
@@ -73,9 +81,10 @@ export class CryptaScreenClient {
         const retryCount = (configAny.__retryCount as number) || 0;
         const status = error.response?.status;
 
-        // Retry on 429 or 5xx
+        // Retry on 429 (rate limit) or 5xx — never on 429 quota_exceeded (CS-08B: the monthly plan quota is used up;
+        // a retry cannot succeed before the monthly reset)
         if (
-          (status === 429 || (status !== undefined && status >= 500)) &&
+          ((status === 429 && !isQuotaExceeded(error)) || (status !== undefined && status >= 500)) &&
           retryCount < this.maxRetries
         ) {
           configAny.__retryCount = retryCount + 1;
@@ -137,7 +146,26 @@ export class CryptaScreenClient {
         return new ValidationError(message, fieldErrors, requestId, body?.code as string | undefined, items);
       }
 
+      case 402:
+        if (body?.code === "SERVICE_PAUSED" || body?.error === "service_paused") {
+          return new ServicePausedError(
+            message,
+            requestId,
+            body?.subscriptionStatus as string | undefined,
+            body?.billing_url as string | undefined,
+          );
+        }
+        return new CryptaScreenError(message, 402, (body?.code as string) ?? "PAYMENT_REQUIRED", requestId, body);
+
       case 429: {
+        if (isQuotaExceeded(error)) {
+          return new QuotaExceededError(
+            message,
+            requestId,
+            body?.resets_at as string | undefined,
+            body?.upgrade_url as string | undefined,
+          );
+        }
         const retryAfter = error.response?.headers?.["retry-after"];
         const retryAfterMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 60_000;
         const resetAt = new Date(Date.now() + retryAfterMs);

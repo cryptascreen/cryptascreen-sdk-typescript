@@ -7,6 +7,8 @@ export {
   AuthenticationError,
   RateLimitError,
   NotFoundError,
+  QuotaExceededError,
+  ServicePausedError,
   ValidationError,
 } from "./errors.js";
 export type { ValidationItem } from "./errors.js";

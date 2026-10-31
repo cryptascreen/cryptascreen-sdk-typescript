@@ -127,6 +127,8 @@ import {
   CryptaScreenError,
   AuthenticationError,
   RateLimitError,
+  QuotaExceededError,
+  ServicePausedError,
   NotFoundError,
   ValidationError,
 } from "@cryptascreen/sdk";
@@ -134,7 +136,13 @@ import {
 try {
   await client.screening.screenAddress({ address: "0x...", chain: "ethereum" });
 } catch (error) {
-  if (error instanceof RateLimitError) {
+  if (error instanceof QuotaExceededError) {
+    // The plan's monthly screenings are used up (429 quota_exceeded). Not retried; clears at error.resetsAt.
+    console.log(`Monthly quota used up; resets ${error.resetsAt}`);
+  } else if (error instanceof ServicePausedError) {
+    // A payment is overdue (402 SERVICE_PAUSED). The plan is unchanged; screening resumes once the invoice is paid.
+    console.log(`Screening paused (${error.subscriptionStatus})`);
+  } else if (error instanceof RateLimitError) {
     console.log(`Rate limited. Retry after: ${error.resetAt}`);
   } else if (error instanceof AuthenticationError) {
     console.log("Invalid API key");

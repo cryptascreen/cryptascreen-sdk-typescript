@@ -48,6 +48,38 @@ export class RateLimitError extends CryptaScreenError {
   }
 }
 
+/**
+ * 429 with `error: "quota_exceeded"`: the plan's monthly screenings are used up. NOT a rate limit — the SDK does not
+ * retry it; it clears at `resetsAt` (first day of the next UTC month) or when the plan is upgraded.
+ */
+export class QuotaExceededError extends CryptaScreenError {
+  public readonly resetsAt?: string;
+  public readonly upgradeUrl?: string;
+
+  constructor(message: string, requestId?: string, resetsAt?: string, upgradeUrl?: string) {
+    super(message, 429, "QUOTA_EXCEEDED", requestId, { resetsAt, upgradeUrl });
+    this.name = "QuotaExceededError";
+    this.resetsAt = resetsAt;
+    this.upgradeUrl = upgradeUrl;
+  }
+}
+
+/**
+ * 402 `SERVICE_PAUSED`: a payment is overdue (subscription past_due / unpaid). The plan is unchanged; screening
+ * resumes when the invoice is paid. Not retried.
+ */
+export class ServicePausedError extends CryptaScreenError {
+  public readonly subscriptionStatus?: string;
+  public readonly billingUrl?: string;
+
+  constructor(message: string, requestId?: string, subscriptionStatus?: string, billingUrl?: string) {
+    super(message, 402, "SERVICE_PAUSED", requestId, { subscriptionStatus, billingUrl });
+    this.name = "ServicePausedError";
+    this.subscriptionStatus = subscriptionStatus;
+    this.billingUrl = billingUrl;
+  }
+}
+
 export class NotFoundError extends CryptaScreenError {
   constructor(resource: string, id: string, requestId?: string) {
     super(`${resource} not found: ${id}`, 404, "NOT_FOUND", requestId);
