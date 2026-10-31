@@ -10,6 +10,10 @@ export {
   QuotaExceededError,
   ServicePausedError,
   ValidationError,
+  PlanLimitError,
+  SeatLimitReachedError,
+  ApiKeyLimitReachedError,
+  PLAN_LIMIT_CODES,
 } from "./errors.js";
 export type { ValidationItem } from "./errors.js";
 

@@ -8,6 +8,10 @@ import {
   QuotaExceededError,
   ServicePausedError,
   ValidationError,
+  PlanLimitError,
+  SeatLimitReachedError,
+  ApiKeyLimitReachedError,
+  PLAN_LIMIT_CODES,
 } from "./errors.js";
 import type { ValidationItem } from "./errors.js";
 import { ScreeningEndpoints } from "./endpoints/screening.js";
@@ -144,6 +148,19 @@ export class CryptaScreenClient {
           fieldErrors[key] = [...(fieldErrors[key] ?? []), it.message];
         }
         return new ValidationError(message, fieldErrors, requestId, body?.code as string | undefined, items);
+      }
+
+      case 403: {
+        const code = (body?.error as string | undefined) ?? (body?.code as string | undefined);
+        if (code && (PLAN_LIMIT_CODES as readonly string[]).includes(code)) {
+          const used = body?.used as number | undefined;
+          const limit = body?.limit as number | undefined;
+          const plan = body?.plan as string | undefined;
+          if (code === "SEAT_LIMIT_REACHED") return new SeatLimitReachedError(message, requestId, used, limit, plan);
+          if (code === "API_KEY_LIMIT_REACHED") return new ApiKeyLimitReachedError(message, requestId, used, limit, plan);
+          return new PlanLimitError(message, code, requestId, used, limit, plan);
+        }
+        return new CryptaScreenError(message, 403, (body?.code as string) ?? (body?.error as string) ?? "FORBIDDEN", requestId, body);
       }
 
       case 402:

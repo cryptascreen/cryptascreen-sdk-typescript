@@ -7,6 +7,9 @@ import {
   QuotaExceededError,
   RateLimitError,
   ServicePausedError,
+  PlanLimitError,
+  SeatLimitReachedError,
+  ApiKeyLimitReachedError,
 } from "../src/index.js";
 
 // CS-08B: billing outcomes of a screening call, as the backend sends them to API-key clients.
@@ -84,5 +87,41 @@ describe("CS-08B billing errors", () => {
     expect(err).not.toBeInstanceOf(ServicePausedError);
     expect(err.status).toBe(402);
     expect(err.code).toBe("SOMETHING_ELSE");
+  });
+});
+
+// w2-billing: 403 plan-limit refusals { error: CODE, message, used, limit, plan } — never retried.
+describe("w2-billing plan-limit errors", () => {
+  it("403 BULK_LIMIT_REACHED on bulk -> PlanLimitError, sent once", async () => {
+    mock.onPost("/api/v1/screen/bulk").reply(403, {
+      error: "BULK_LIMIT_REACHED", message: "Bulk larger than the plan allows", used: 2000, limit: 1000, plan: "professional",
+    });
+    const err = await client.screening.screenBulk({ addresses: [ADDR], chains: ["ethereum"] }).catch((e) => e);
+    expect(err).toBeInstanceOf(PlanLimitError);
+    expect(err.status).toBe(403);
+    expect(err.limitCode).toBe("BULK_LIMIT_REACHED");
+    expect(err.limit).toBe(1000);
+    expect(err.plan).toBe("professional");
+    expect(mock.history.post.length).toBe(1);
+  });
+
+  it("403 SEAT_LIMIT_REACHED -> SeatLimitReachedError; API_KEY_LIMIT_REACHED -> ApiKeyLimitReachedError", async () => {
+    mock.onPost("/api/v1/screen/address").replyOnce(403, { error: "SEAT_LIMIT_REACHED", used: 2, limit: 2, plan: "starter" });
+    const seat = await client.screening.screenAddress({ address: ADDR, chain: "ethereum" }).catch((e) => e);
+    expect(seat).toBeInstanceOf(SeatLimitReachedError);
+    expect(seat).toBeInstanceOf(PlanLimitError);
+    expect(seat.code).toBe("SEAT_LIMIT_REACHED");
+    expect(seat.used).toBe(2);
+    mock.onPost("/api/v1/screen/address").replyOnce(403, { error: "API_KEY_LIMIT_REACHED", used: 1, limit: 1 });
+    const key = await client.screening.screenAddress({ address: ADDR, chain: "ethereum" }).catch((e) => e);
+    expect(key).toBeInstanceOf(ApiKeyLimitReachedError);
+    expect(key.limit).toBe(1);
+  });
+
+  it("another 403 stays a generic CryptaScreenError", async () => {
+    mock.onPost("/api/v1/screen/address").reply(403, { error: "forbidden", message: "no" });
+    const err = await client.screening.screenAddress({ address: ADDR, chain: "ethereum" }).catch((e) => e);
+    expect(err).not.toBeInstanceOf(PlanLimitError);
+    expect(err.status).toBe(403);
   });
 });

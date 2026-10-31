@@ -80,6 +80,53 @@ export class ServicePausedError extends CryptaScreenError {
   }
 }
 
+/**
+ * w2-billing: 403 with a plan-limit code — an ADDITION beyond the plan's catalogue entitlement was refused (body
+ * `{ error: CODE, message, used, limit, plan }`). Existing resources are never removed on a downgrade; only the next
+ * addition is refused. Not retried. Codes reachable with an API key: MONITORED_WALLET_LIMIT_REACHED (add a monitored
+ * wallet), BULK_LIMIT_REACHED (bulk larger than the plan allows), feature_not_in_plan; SEAT_LIMIT_REACHED (team
+ * invite / SCIM) and API_KEY_LIMIT_REACHED (key creation) come from session/SCIM routes but share the type.
+ */
+export class PlanLimitError extends CryptaScreenError {
+  public readonly limitCode: string;
+  public readonly used?: number;
+  public readonly limit?: number;
+  public readonly plan?: string;
+
+  constructor(message: string, limitCode: string, requestId?: string, used?: number, limit?: number, plan?: string) {
+    super(message, 403, limitCode, requestId, { used, limit, plan });
+    this.name = "PlanLimitError";
+    this.limitCode = limitCode;
+    this.used = used;
+    this.limit = limit;
+    this.plan = plan;
+  }
+}
+
+/** 403 SEAT_LIMIT_REACHED: all user seats of the plan are taken (matrix M6). */
+export class SeatLimitReachedError extends PlanLimitError {
+  constructor(message: string, requestId?: string, used?: number, limit?: number, plan?: string) {
+    super(message, "SEAT_LIMIT_REACHED", requestId, used, limit, plan);
+    this.name = "SeatLimitReachedError";
+  }
+}
+
+/** 403 API_KEY_LIMIT_REACHED: the plan's API-key count is reached (matrix M7). */
+export class ApiKeyLimitReachedError extends PlanLimitError {
+  constructor(message: string, requestId?: string, used?: number, limit?: number, plan?: string) {
+    super(message, "API_KEY_LIMIT_REACHED", requestId, used, limit, plan);
+    this.name = "ApiKeyLimitReachedError";
+  }
+}
+
+export const PLAN_LIMIT_CODES = [
+  "SEAT_LIMIT_REACHED",
+  "API_KEY_LIMIT_REACHED",
+  "MONITORED_WALLET_LIMIT_REACHED",
+  "BULK_LIMIT_REACHED",
+  "feature_not_in_plan",
+] as const;
+
 export class NotFoundError extends CryptaScreenError {
   constructor(resource: string, id: string, requestId?: string) {
     super(`${resource} not found: ${id}`, 404, "NOT_FOUND", requestId);
