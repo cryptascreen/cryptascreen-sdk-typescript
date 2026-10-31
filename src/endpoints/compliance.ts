@@ -46,7 +46,7 @@ export class ComplianceEndpoints {
   }
 
   /**
-   * @deprecated DAC8 reporting is DEFERRED (CS-09): the generated XML is an unvalidated draft, not a filing, and
+   * @deprecated DAC8 reporting is deferred: the generated XML is an unvalidated draft, not a filing, and
    * no national submission channel is implemented. The request shape now matches the backend
    * (taxYear, jurisdiction, operator, users); the 0.1.x shape (periodStart/periodEnd/addresses) is rejected
    * client-side with a ValidationError instead of a server 400.

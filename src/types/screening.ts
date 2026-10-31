@@ -16,7 +16,7 @@ export type RiskLevel =
 
 export type Coverage = "COVERED" | "NOT_ANALYZED";
 
-/** June values + CS-05 additions. New values may be added: treat unknown values as "not COMPLETE". */
+/** Original values plus later additions. New values may be added: treat unknown values as "not COMPLETE". */
 export type HeuristicsStatus =
   | "UNAVAILABLE"
   | "SKIPPED"
@@ -36,7 +36,7 @@ export type DetectorOutcome =
   | "SKIPPED_UNSUPPORTED"
   | "DISABLED";
 
-/** CS-05 per-detector outcome of a synchronous Tier-3 run. */
+/** Per-detector outcome of a synchronous Tier-3 run. */
 export interface HeuristicDetectorStatus {
   detector: string;
   outcome: DetectorOutcome;
@@ -46,7 +46,7 @@ export interface HeuristicDetectorStatus {
   flagCount: number;
 }
 
-/** CS-02 policy version, e.g. "cs-policy-2026.10". */
+/** Policy version, e.g. "cs-policy-2026.10". */
 export type PolicyVersion = string;
 
 export type LayerState =
@@ -74,7 +74,7 @@ export type MatchState = "CONFIRMED" | "CANDIDATE" | "CONTEXT" | "EXPIRED" | "DI
 
 export type FindingCategory = "SANCTIONS" | "THREAT_INTEL" | "PEP" | "ENTITY_LABEL" | "ON_CHAIN";
 
-/** CS-01 registry freshness of one source. */
+/** Registry freshness of one source. */
 export interface SourceFreshness {
   sourceId: string;
   issuer?: string | null;
@@ -139,7 +139,7 @@ export interface ScreeningFlag {
   sourceAddress?: string | null;
   sourceSanctionType?: string | null;
   sourceEntity?: string | null;
-  // CS-02 evidence / policy fields (additive)
+  // Evidence / policy fields (additive)
   category?: FindingCategory | null;
   matchState?: MatchState | null;
   blocking?: boolean | null;
@@ -188,9 +188,9 @@ export interface ScreeningResponse {
   cacheHit: boolean;
   heuristicsStatus?: HeuristicsStatus | (string & {}) | null;
   heuristicsJobId?: string | null;
-  /** CS-05: per-detector outcomes; null when Tier-3 did not run in this request. */
+  /** Per-detector outcomes; null when Tier-3 did not run in this request. */
   heuristicsDetectors?: HeuristicDetectorStatus[] | null;
-  // CS-02 (additive)
+  // Additive fields
   policyVersion?: PolicyVersion | null;
   scoreVersion?: string | null;
   /** Confirmed blocking (asset-freeze) designation — the only path to CRITICAL. */
@@ -201,7 +201,7 @@ export interface ScreeningResponse {
   checkedLayers?: string[] | null;
   layers?: ScreeningLayers | null;
   review?: ReviewStatus | null;
-  // CS-03 (additive)
+  // Additive fields
   /**
    * Fingerprint of the validity vector (source snapshot / data versions, tenant policy, policy + score version,
    * chain provider, entitlements) this result was computed under. Same value = same data produced the result.
@@ -209,7 +209,7 @@ export interface ScreeningResponse {
   evidenceVersion?: string | null;
   /** Versions, cache decision, result age and per-source age. */
   validity?: ResultValidity | null;
-  // CS-04 (additive)
+  // Additive fields
   /**
    * Id of the append-only evaluation that recorded this decision (`screening.getEvaluation(id)`). On the history
    * endpoint: the newest evaluation for the address. Null only for results stored before V5 without a backfill.
@@ -217,7 +217,7 @@ export interface ScreeningResponse {
   evaluationId?: string | null;
 }
 
-/** CS-03 cache decision of one result. Unknown future values may appear. */
+/** Cache decision of one result. Unknown future values may appear. */
 export type CacheDecision =
   | "HIT"
   | "MISS"
@@ -229,7 +229,7 @@ export type CacheDecision =
   | "NOT_REUSABLE"
   | "VERSION_UNKNOWN";
 
-/** CS-03: which data produced a result and how old it is (backend `ResultValidity`). */
+/** Which data produced a result and how old it is (backend `ResultValidity`). */
 export interface ResultValidity {
   evidenceVersion: string;
   cacheDecision: CacheDecision | (string & {});
@@ -257,7 +257,7 @@ export interface ResultValidity {
   tier0Lookup?: string | null;
 }
 
-/** CS-04: one append-only evaluation (`GET /api/v1/screen/evaluations/{id}`). */
+/** One append-only evaluation (`GET /api/v1/screen/evaluations/{id}`). */
 export interface ScreeningEvaluation {
   evaluationId: string;
   /** Set when the evaluation was produced by an async bulk job. */
@@ -318,7 +318,7 @@ export interface ScreeningEvaluation {
   } | null;
 }
 
-/** CS-04: newest-first page of evaluations for one address. */
+/** Newest-first page of evaluations for one address. */
 export interface ScreeningEvaluationPage {
   items: ScreeningEvaluation[];
   page: number;
@@ -356,7 +356,7 @@ export type ScreeningJobStatus =
   | "COMPLETED"
   | "PARTIAL"
   | "FAILED"
-  /** CS-08 (additive): terminal — cancelled before completion; processed items keep their results */
+  /** Additive: terminal — cancelled before completion; processed items keep their results */
   | "CANCELLED";
 
 /** Terminal job statuses (polling stops). Unknown future values are NOT terminal. */
@@ -386,7 +386,7 @@ export interface ScreeningJob {
   createdAt: string;
   startedAt?: string | null;
   completedAt?: string | null;
-  // CS-08 (additive)
+  // Additive fields
   /** ALL_ITEMS_FAILED | ITEM_ERRORS | CANCELLED_BY_CLIENT | LEASE_EXPIRED | INPUT_NOT_PERSISTED | WORKER_ERROR */
   errorCode?: string | null;
   /** A cancellation was requested and is being applied (status stays PENDING/PROCESSING until the worker stops). */
@@ -397,7 +397,7 @@ export interface ScreeningJob {
   scoreVersion?: string | null;
 }
 
-/** CS-08: one stored per-address item of an async job (input order). */
+/** One stored per-address item of an async job (input order). */
 export interface ScreeningJobItem {
   index: number;
   address: string;
@@ -425,7 +425,7 @@ export interface AsyncSubmitOptions {
   idempotencyKey?: string;
 }
 
-/** CS-08: one page (0-based) of an async job's stored items (`GET /api/v1/screen/jobs/{id}/results`). */
+/** One page (0-based) of an async job's stored items (`GET /api/v1/screen/jobs/{id}/results`). */
 export interface ScreeningJobResultsPage {
   jobId?: string | null;
   /** Job status at read time. */

@@ -1,5 +1,5 @@
 // Mirrors backend com.cryptascreen.travelrule.dto.* / travelrule.TravelRuleCheckResult / TravelRulePayload and
-// com.cryptascreen.dac8.dto.*. Travel Rule and DAC8 are CS-09 scope: payload builders are NOT regulatory filing.
+// com.cryptascreen.dac8.dto.*. Travel Rule and DAC8: payload builders are NOT regulatory filing.
 
 /** Backend TravelRuleCheckRequest. */
 export interface TravelRuleCheckRequest {

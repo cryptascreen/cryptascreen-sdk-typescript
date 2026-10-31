@@ -15,11 +15,11 @@ export interface GraphRequest {
   dateTo?: string;
   aggregateEdges?: boolean;
   forceRefresh?: boolean;
-  /** CS-05: follow only transfers at/after (FORWARD) or at/before (BACKWARD) the time funds reached a node. */
+  /** Follow only transfers at/after (FORWARD) or at/before (BACKWARD) the time funds reached a node. */
   timeOrdered?: boolean;
 }
 
-/** CS-05 per-node/edge read completion. NOT_EXPANDED = terminal depth / node cap / unavailable provider. */
+/** Per-node/edge read completion. NOT_EXPANDED = terminal depth / node cap / unavailable provider. */
 export type GraphScopeStatus = "COMPLETE" | "TRUNCATED" | "PARTIAL" | "FAILED" | "UNSUPPORTED" | "NOT_EXPANDED";
 
 export interface GraphNode {
@@ -28,7 +28,7 @@ export interface GraphNode {
   chain: string;
   label?: string | null;
   category?: string | null;
-  /** CS-04: null = not screened / UNKNOWN (never a 0 placeholder). */
+  /** null = not screened / UNKNOWN (never a 0 placeholder). */
   riskScore: number | null;
   riskLevel?: string | null;
   sanctionsMatch: boolean;
@@ -40,7 +40,7 @@ export interface GraphNode {
   txCount: number;
   firstSeen?: string | null;
   lastSeen?: string | null;
-  /** CS-05: BFS depth (seed = 0). */
+  /** BFS depth (seed = 0). */
   hop?: number;
   scopeStatus?: GraphScopeStatus | (string & {}) | null;
 }
@@ -57,14 +57,14 @@ export interface GraphEdge {
   timestamp?: string | null;
   txCount: number;
   isAggregated: boolean;
-  /** CS-05: BFS depth of the far endpoint (1 = adjacent to the seed). */
+  /** BFS depth of the far endpoint (1 = adjacent to the seed). */
   hop?: number;
   firstBlock?: number | null;
   lastBlock?: number | null;
   scopeStatus?: GraphScopeStatus | (string & {}) | null;
 }
 
-/** CS-05 overall graph completeness. Unknown future values must be treated as not COMPLETE. */
+/** Overall graph completeness. Unknown future values must be treated as not COMPLETE. */
 export type GraphStatus = "COMPLETE" | "PARTIAL" | "TRUNCATED" | "FAILED" | "UNSUPPORTED" | "UNAVAILABLE";
 
 export interface GraphStats {
@@ -74,17 +74,17 @@ export interface GraphStats {
   sanctionedNodes: number;
   totalValueTracedUsd?: number | null;
   maxHopsReached: number;
-  /** June flag: true whenever `status` is not COMPLETE. */
+  /** Legacy flag: true whenever `status` is not COMPLETE. */
   truncated: boolean;
-  /** CS-05 (null from pre-CS-05 servers: fall back to `truncated`). */
+  /** Overall status (null from older servers: fall back to `truncated`). */
   status?: GraphStatus | (string & {}) | null;
-  /** CS-05: machine reason codes (TruncationReason / FailureReason names) or the unavailability reason. */
+  /** Machine reason codes (TruncationReason / FailureReason names) or the unavailability reason. */
   statusReasons?: string[] | null;
-  /** CS-05: effective node cap = min(request.maxNodes, server chain budget). */
+  /** Effective node cap = min(request.maxNodes, server chain budget). */
   nodeCap?: number;
 }
 
-/** CS-05: the read scope every node/edge was read within. */
+/** The read scope every node/edge was read within. */
 export interface GraphScope {
   chain: string;
   direction: string;
@@ -111,7 +111,7 @@ export interface GraphResponse {
 
 export type GraphExportFormat = "json" | "csv";
 
-/** True only when the backend states the graph read was COMPLETE (null status: June `truncated` flag). */
+/** True only when the backend states the graph read was COMPLETE (null status: legacy `truncated` flag). */
 export function isGraphComplete(r: Pick<GraphResponse, "stats">): boolean {
   const s = r.stats;
   if (!s) return false;

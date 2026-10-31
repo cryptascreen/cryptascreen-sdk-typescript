@@ -13,7 +13,7 @@ export interface SanctionsCheckResponse {
   /** Sanction list / category enum, e.g. OFAC_SDN, EU_CONSOLIDATED. */
   sanctionType?: string | null;
   confidence: number;
-  // CS-02 (additive). A tenant review/suppression decision is reported in `review` and never hides `match`.
+  // Additive. A tenant review/suppression decision is reported in `review` and never hides `match`.
   canonicalChain?: string;
   /** Confirmed active applicable blocking (asset-freeze) designation. */
   blocking?: boolean;

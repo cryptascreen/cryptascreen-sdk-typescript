@@ -26,7 +26,7 @@ const DEFAULT_BASE_URL = "https://api.cryptascreen.com";
 const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_RETRIES = 3;
 
-/** CS-08B: 429 `quota_exceeded` is the plan's monthly cap, not a rate limit. */
+/** 429 `quota_exceeded` is the plan's monthly cap, not a rate limit. */
 function isQuotaExceeded(error: AxiosError): boolean {
   const body = error.response?.data as Record<string, unknown> | undefined;
   return error.response?.status === 429 && (body?.error === "quota_exceeded" || body?.code === "QUOTA_EXCEEDED");
@@ -85,7 +85,7 @@ export class CryptaScreenClient {
         const retryCount = (configAny.__retryCount as number) || 0;
         const status = error.response?.status;
 
-        // Retry on 429 (rate limit) or 5xx — never on 429 quota_exceeded (CS-08B: the monthly plan quota is used up;
+        // Retry on 429 (rate limit) or 5xx — never on 429 quota_exceeded (the monthly plan quota is used up;
         // a retry cannot succeed before the monthly reset)
         if (
           ((status === 429 && !isQuotaExceeded(error)) || (status !== undefined && status >= 500)) &&
@@ -139,7 +139,7 @@ export class CryptaScreenClient {
         const fieldErrors: Record<string, string[]> = {
           ...((body?.fieldErrors as Record<string, string[]>) ?? {}),
         };
-        // CS-02 backend shape: { error, code, field, message, items? }
+        // Backend error shape: { error, code, field, message, items? }
         const field = body?.field as string | undefined;
         if (field) fieldErrors[field] = [...(fieldErrors[field] ?? []), message];
         const items = (body?.items as ValidationItem[] | undefined) ?? [];

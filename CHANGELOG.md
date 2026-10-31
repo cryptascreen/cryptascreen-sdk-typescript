@@ -1,16 +1,16 @@
 # Changelog
 
-## 0.2.0 — unreleased (CS-08 contract alignment; not published)
+## 0.2.0 — unreleased (API contract alignment; not published)
 
 Aligns the SDK with the CryptaScreen backend controllers and `openapi-customer.json`. Every SDK method is now checked
 against a scanned backend route table (`tests/path-table.test.ts`, fixture `tests/fixtures/backend-routes.json`).
 
 ### Added
-- CS-08B: `QuotaExceededError` (429 `quota_exceeded`: the plan's monthly screenings are used up, with `resetsAt` /
+- `QuotaExceededError` (429 `quota_exceeded`: the plan's monthly screenings are used up, with `resetsAt` /
   `upgradeUrl`) and `ServicePausedError` (402 `SERVICE_PAUSED`: payment overdue, plan unchanged). Neither is retried —
   a plain 429 rate limit is still retried and still a `RateLimitError`. No billing/usage methods: the backend has no
   API-key billing endpoint (`/api/v1/screen-billing/*` is cookie-session only).
-- `ScreeningResponse.evaluationId` (CS-04), `evidenceVersion` and `validity: ResultValidity` (CS-03: versions, cache
+- `ScreeningResponse.evaluationId`, `evidenceVersion` and `validity: ResultValidity` (versions, cache
   decision, result age, per-source age).
 - `screening.getEvaluation(id)` → `GET /api/v1/screen/evaluations/{id}`;
   `screening.listEvaluations(chain, address, { page, size })` → `GET /api/v1/screen/address/{chain}/{address}/evaluations`;
@@ -21,11 +21,11 @@ against a scanned backend route table (`tests/path-table.test.ts`, fixture `test
   `screening.getJobResults(jobId, { page, size })` → `GET /api/v1/screen/jobs/{id}/results?page=&size=` returning
   `ScreeningJobResultsPage {jobId, status, page, size, totalItems, totalPages, items: ScreeningJobItem[]}`;
   `screening.cancelJob(jobId)` → `POST /api/v1/screen/jobs/{id}/cancel` (202; 409 `JOB_ALREADY_TERMINAL`). Both routes
-  are added by the CS-08 backend half.
+  are new in the matching backend release.
 - `screenBulkAsync(request, { idempotencyKey })`: an `Idempotency-Key` header is always sent (generated when not
   supplied), so the SDK's own 429/5xx retries reuse the same key. `screenBulkAndWait` accepts the same option and also
   stops on `CANCELLED`.
-- Graph (CS-05): `GraphStats.status` / `statusReasons` / `nodeCap`, `GraphResponse.scope: GraphScope`, node/edge `hop`
+- Graph: `GraphStats.status` / `statusReasons` / `nodeCap`, `GraphResponse.scope: GraphScope`, node/edge `hop`
   and `scopeStatus`, `GraphRequest.timeOrdered`, helper `isGraphComplete`.
 - `intelligence.getEntityLabels(chain, address)` → `GET /api/v1/intelligence/entity/{chain}/{address}` (array).
 
@@ -43,7 +43,7 @@ against a scanned backend route table (`tests/path-table.test.ts`, fixture `test
   entity. Deprecated in favour of `getEntityLabels`.
 - `cases.updateStatus` uses `PUT /api/v1/cases/{ref}/status` (was `PATCH`, which the backend does not map).
 
-### Documentation (CS-10 copy decisions, owner ruling 2026-10-31n)
+### Documentation
 - README Quick Start replaced: current types (`sanctionsMatch`, `riskLevel` incl. `MINIMAL`/`UNKNOWN`, nullable
   `riskScore`), `screenBulk({ addresses, chains })` returning `ScreeningResponse[]`, async jobs read through
   `getJobResults`; a synthetic example address instead of a real mainnet address.
@@ -54,7 +54,7 @@ against a scanned backend route table (`tests/path-table.test.ts`, fixture `test
   support contact (in-app or support@cryptacount.com).
 
 ### Deprecated
-- `compliance.generateDac8Report`: DAC8 is DEFERRED (CS-09); output is an unvalidated draft, not a filing. The
+- `compliance.generateDac8Report`: DAC8 reporting is deferred; output is an unvalidated draft, not a filing. The
   request type now matches the backend (`taxYear`, `jurisdiction`, `operator`, `users`); the 0.1.x shape is rejected
   client-side with `ValidationError` (`validationCode: "DAC8_REQUEST_SHAPE"`) instead of a server 400.
 - `intelligence.getVaspInfo`: no backend route; throws `CryptaScreenError` (`code: "ENDPOINT_NOT_AVAILABLE"`)

@@ -72,7 +72,7 @@ export class ServicePausedError extends CryptaScreenError {
   public readonly subscriptionStatus?: string;
   public readonly billingUrl?: string;
   /**
-   * Billing port (owner decision 8): why the plan is blocked — the subscription state (PAST_DUE, PAUSED, ...) or
+   * Why the plan is blocked — the subscription state (PAST_DUE, PAUSED, ...) or
    * PERIOD_NOT_PAID (the current month of a paid plan has no paid invoice). The plan is never downgraded.
    */
   public readonly reason?: string;
@@ -87,7 +87,7 @@ export class ServicePausedError extends CryptaScreenError {
 }
 
 /**
- * w2-billing: 403 with a plan-limit code — an ADDITION beyond the plan's catalogue entitlement was refused (body
+ * 403 with a plan-limit code — an ADDITION beyond the plan's catalogue entitlement was refused (body
  * `{ error: CODE, message, used, limit, plan }`). Existing resources are never removed on a downgrade; only the next
  * addition is refused. Not retried. Codes reachable with an API key: MONITORED_WALLET_LIMIT_REACHED (add a monitored
  * wallet), BULK_LIMIT_REACHED (bulk larger than the plan allows), feature_not_in_plan; SEAT_LIMIT_REACHED (team
@@ -149,9 +149,9 @@ export interface ValidationItem {
 
 export class ValidationError extends CryptaScreenError {
   public readonly fieldErrors: Record<string, string[]>;
-  /** CS-02 machine code, e.g. UNKNOWN_CHAIN, INVALID_ADDRESS_FORMAT, INVALID_CHECKSUM, INVALID_BULK_ITEMS. */
+  /** Machine code, e.g. UNKNOWN_CHAIN, INVALID_ADDRESS_FORMAT, INVALID_CHECKSUM, INVALID_BULK_ITEMS. */
   public readonly validationCode?: string;
-  /** CS-02 bulk: every invalid item (the whole request was rejected). */
+  /** Bulk: every invalid item (the whole request was rejected). */
   public readonly items: ValidationItem[];
 
   constructor(

@@ -97,7 +97,7 @@ client.cases.escalate(caseId, { reason, assigneeId? })
 ### Compliance
 
 ```typescript
-client.compliance.checkTravelRule({ chain, fromAddress, toAddress, transferAmountUsd, txHash? }) // threshold logic not validated (CS-09 deferred)
+client.compliance.checkTravelRule({ chain, fromAddress, toAddress, transferAmountUsd, txHash? }) // threshold logic not validated (deferred)
 client.compliance.buildTravelRulePayload({ chain, originatorWalletAddress, transferAmountUsd, ... }) // draft, not transmitted
 client.compliance.identifyVasp(chain, address)
 client.compliance.generateDac8Report({ taxYear, jurisdiction, operator, users }) // @deprecated: DAC8 is deferred, output is an unvalidated draft

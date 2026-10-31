@@ -75,7 +75,7 @@ export class ScreeningEndpoints {
   }
 
   /**
-   * CS-08: one page (0-based, size 1..1000) of a job's stored per-address items, input order.
+   * One page (0-based, size 1..1000) of a job's stored per-address items, input order.
    * Body: {jobId, status, page, size, totalItems, totalPages, items[]}; a Spring-style `content` page is also accepted.
    */
   async getJobResults(jobId: string, options: PageOptions = {}): Promise<ScreeningJobResultsPage> {
@@ -100,7 +100,7 @@ export class ScreeningEndpoints {
   }
 
   /**
-   * CS-08: request cancellation of a PENDING/PROCESSING job (202 with the job; CANCELLED at once when it had not
+   * Request cancellation of a PENDING/PROCESSING job (202 with the job; CANCELLED at once when it had not
    * started, otherwise `cancelRequested=true`). A finished job yields 409 JOB_ALREADY_TERMINAL (CryptaScreenError).
    */
   async cancelJob(jobId: string): Promise<ScreeningJob> {
@@ -116,7 +116,7 @@ export class ScreeningEndpoints {
     return data;
   }
 
-  /** CS-04: append-only evaluations of one address, newest first. */
+  /** Append-only evaluations of one address, newest first. */
   async listEvaluations(chain: string, address: string, options: PageOptions = {}): Promise<ScreeningEvaluationPage> {
     const { data } = await this.http.get<ScreeningEvaluationPage>(
       `/api/v1/screen/address/${enc(chain)}/${enc(address)}/evaluations`,
@@ -125,7 +125,7 @@ export class ScreeningEndpoints {
     return data;
   }
 
-  /** CS-04: one evaluation by id (`ScreeningResponse.evaluationId`). */
+  /** One evaluation by id (`ScreeningResponse.evaluationId`). */
   async getEvaluation(evaluationId: string): Promise<ScreeningEvaluation> {
     const { data } = await this.http.get<ScreeningEvaluation>(
       `/api/v1/screen/evaluations/${enc(evaluationId)}`,
