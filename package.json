@@ -1,6 +1,6 @@
 {
   "name": "@cryptascreen/sdk",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cryptascreen/cryptascreen-sdk-typescript.git"
@@ -10,10 +10,10 @@
     "url": "https://github.com/cryptascreen/cryptascreen-sdk-typescript/issues"
   },
   "description": "Type-safe TypeScript client for the CryptaScreen REST API",
-  "author": "CryptaScreen <support@cryptacount.com>",
+  "author": "CryptaCount, Inc. <support@cryptacount.com>",
   "maintainers": [
     {
-      "name": "CryptaScreen",
+      "name": "CryptaCount, Inc.",
       "email": "support@cryptacount.com"
     }
   ],
@@ -41,9 +41,9 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "axios-mock-adapter": "^2.1.0",
-    "tsup": "^8.5.1",
+    "tsup": "^9.0.0",
     "typescript": "^5.7.2",
-    "vitest": "^4.1.12"
+    "vitest": "^5.1.1"
   },
   "keywords": [
     "cryptascreen",

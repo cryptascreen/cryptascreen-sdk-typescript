@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2 - 2026-11-24
+
+### Changed
+- Package metadata: author and maintainer are CryptaCount, Inc. (the copyright and licence holder, as in LICENSE).
+- Build and test tooling: tsup 9, vitest 5; CI actions checkout 7 and setup-node 7. No code or API change; same behaviour as 0.3.1.
+
 ## 0.3.1 - 2026-11-24
 
 ### Fixed
