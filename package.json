@@ -10,11 +10,10 @@
     "url": "https://github.com/cryptascreen/cryptascreen-sdk-typescript/issues"
   },
   "description": "Type-safe TypeScript client for the CryptaScreen REST API",
-  "author": "CryptaCount, Inc. <support@cryptacount.com>",
+  "author": "CryptaCount, Inc.",
   "maintainers": [
     {
-      "name": "CryptaCount, Inc.",
-      "email": "support@cryptacount.com"
+      "name": "CryptaCount, Inc."
     }
   ],
   "main": "dist/index.js",

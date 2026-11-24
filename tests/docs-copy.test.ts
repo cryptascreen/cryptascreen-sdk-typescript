@@ -9,7 +9,7 @@
  *
  * Rules:
  * - FORBIDDEN_CLAIMS: no "Unlimited", no SLA / service-level promise, no "free forever";
- * - ALLOWED_CONTACT: the only e-mail address is support@cryptacount.com.
+ * - NO_EMAIL: no e-mail address appears in package.json, README, CHANGELOG or src (support is in-app).
  * Job-status enum values (`PENDING|PROCESSING`, "a PENDING/PROCESSING job") are product vocabulary and stay allowed.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -32,7 +32,7 @@ const FORBIDDEN_CLAIMS: Array<[string, RegExp]> = [
 ];
 
 
-const ALLOWED_CONTACT = "support@cryptacount.com";
+const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
 
 const SCANNED = ["README.md", "CHANGELOG.md", ...walk(resolve(ROOT, "src"))];
 const TEXT: Record<string, string> = Object.fromEntries(SCANNED.map((f) => [f, read(f)]));
@@ -54,11 +54,11 @@ describe("SDK docs copy guard", () => {
     expect(hits(re)).toEqual([]);
   });
 
-  it(`the only contact address is ${ALLOWED_CONTACT}`, () => {
-    const addrs = SCANNED.flatMap((f) =>
-      [...TEXT[f].matchAll(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g)].map((m) => [f, m[0]] as const),
-    );
-    expect(addrs.filter(([, a]) => a !== ALLOWED_CONTACT && !a.startsWith("@cryptascreen/"))).toEqual([]);
+  it("no e-mail address in package.json or any published text", () => {
+    const surfaces = [...SCANNED, "package.json"];
+    const addrs = surfaces.flatMap((f) => [...read(f).matchAll(EMAIL)].map((m) => [f, m[0]] as const));
+    expect(addrs.filter(([, a]) => !a.startsWith("@cryptascreen/"))).toEqual([]);
+    expect(JSON.parse(read("package.json")).author).toBe("CryptaCount, Inc.");
   });
 
   it("README: removed content stays removed (stale snippets, real mainnet address, public host claims, stale enums)", () => {
@@ -70,7 +70,7 @@ describe("SDK docs copy guard", () => {
     expect(r).not.toMatch(/max 1000|max 10000/); // caps per plan, no hard-coded numbers
     expect(r).toContain("0x5eed000000000000000000000000000000c50101");
     expect(r).toContain('"MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN"');
-    expect(r).toContain("Support: in-app or support@cryptacount.com.");
+    expect(r).toContain("Support: in-app.");
     expect(r).toContain("Webhook events: SANCTIONS_MATCH, CRITICAL, HIGH_RISK, HEURISTICS_COMPLETE, TEST.");
   });
 });

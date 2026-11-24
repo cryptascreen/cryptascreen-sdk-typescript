@@ -304,7 +304,7 @@ const client = new CryptaScreenClient({
 
 ## Support
 
-Support: in-app or support@cryptacount.com.
+Support: in-app.
 
 ## License
 

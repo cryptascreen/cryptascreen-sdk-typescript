@@ -3,7 +3,8 @@
 ## 0.3.2 - 2026-11-24
 
 ### Changed
-- Package metadata: author and maintainer are CryptaCount, Inc. (the copyright and licence holder, as in LICENSE).
+- Package metadata: author and maintainer are CryptaCount, Inc. (the copyright and licence holder, as in LICENSE), with no e-mail address.
+- Documentation: support is in-app; no e-mail address appears in the package.
 - Build and test tooling: tsup 9, vitest 5; CI actions checkout 7 and setup-node 7. No code or API change; same behaviour as 0.3.1.
 
 ## 0.3.1 - 2026-11-24
@@ -131,7 +132,7 @@ Aligns the SDK with the CryptaScreen customer API. Every SDK method is checked a
   README no longer states a public default host or an npm install).
 - Added the per-layer result statement, the omitted-`chain` default, address validation, plan-capped bulk/job sizes
   and Idempotency-Key, the Travel Rule threshold note, the `mica_registered` caveat, the webhook event list and the
-  support contact (in-app or support@cryptacount.com).
+  support contact (in-app).
 
 ### Deprecated
 - `compliance.generateDac8Report`: output is an unvalidated draft, not a filing. The
