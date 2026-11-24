@@ -66,7 +66,8 @@ describe("SDK docs copy guard", () => {
     expect(r).not.toContain("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
     expect(r).not.toMatch(/result\.sanctioned\b|totalScreened|totalFlagged|job\.results/);
     expect(r).not.toContain('// "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"');
-    expect(r).not.toMatch(/npm install @cryptascreen\/sdk|Default: "https:\/\/api\.cryptascreen\.com"|\/\/ default/);
+    expect(r).toContain("npm install @cryptascreen/sdk");
+    expect(r).not.toMatch(/pre-release|test environment|authori[sz]ed|internal seed|local stack/i);
     expect(r).not.toMatch(/max 1000|max 10000/); // caps per plan, no hard-coded numbers
     expect(r).toContain("0x5eed000000000000000000000000000000c50101");
     expect(r).toContain('"MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN"');

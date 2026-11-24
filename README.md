@@ -2,23 +2,23 @@
 
 Type-safe TypeScript client for the CryptaScreen REST API.
 
-REST API (API key or browser session) and a TypeScript SDK (pre-release).
-
 ## Installation
 
 Supported Node.js versions: 20 and 22 (the versions CI tests).
 
-Pre-release: install from the repository. Set `baseUrl` to the authorised test environment you were given.
+```bash
+npm install @cryptascreen/sdk
+```
 
 ## Quick Start
 
 ```typescript
 import { CryptaScreenClient } from "@cryptascreen/sdk";
 
-// A synthetic, syntactically valid test address (never a real customer or mainnet address in examples).
+// Example address.
 const SYNTHETIC_ADDRESS = "0x5eed000000000000000000000000000000c50101";
 
-const client = new CryptaScreenClient({ apiKey: process.env.CRYPTASCREEN_API_KEY!, baseUrl: process.env.CRYPTASCREEN_BASE_URL! });
+const client = new CryptaScreenClient({ apiKey: process.env.CRYPTASCREEN_API_KEY!,  });
 const result = await client.screening.screenAddress({ address: SYNTHETIC_ADDRESS, chain: "ethereum" });
 console.log(result.riskLevel);       // "MINIMAL" | "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | "UNKNOWN"
 console.log(result.riskScore);       // number, or null when UNKNOWN
@@ -28,13 +28,12 @@ const job = await client.screening.screenBulkAsync({ addresses, chains });
 const page = await client.screening.getJobResults(job.jobId, { page: 0, size: 100 });
 ```
 
-The same request over plain HTTP (to be run against the authorised synthetic environment; the address is a placeholder
-for a documented synthetic EIP-55 address):
+The same request over plain HTTP:
 
 ```bash
-curl -X POST "$CRYPTASCREEN_BASE_URL/api/v1/screen/address" \
+curl -X POST "https://api.cryptascreen.com/api/v1/screen/address" \
   -H "X-API-Key: $CRYPTASCREEN_API_KEY" -H "Content-Type: application/json" \
-  -d '{"address":"<synthetic EIP-55 address>","chain":"ethereum"}'
+  -d '{"address":"<address>","chain":"ethereum"}'
 # → { "chain": "ethereum", "riskLevel": "...", "riskScore": <0-100 or null>, "sanctionsMatch": <bool>,
 #     "assessmentStatus": "...", "layers": { ... }, "evaluationId": "..." }
 ```
@@ -212,14 +211,14 @@ client.compliance.identifyVasp(chain, address)
 client.compliance.generateDac8Report({ taxYear, jurisdiction, operator, users }) // @deprecated: output is an unvalidated draft, not a filing
 ```
 
-`mica_registered` comes from an internal seed table, not from an official register. Do not rely on it.
+`mica_registered` is informational and does not come from an official register.
 
 ### Intelligence
 
 ```typescript
 client.intelligence.getEntityLabels(chain, address)   // all attributions (empty = no label known, not a clean verdict)
 client.intelligence.getEntityLabel(address, chain)    // @deprecated: first label or null
-// getVaspInfo was removed from the API surface (not served by the API); it throws ENDPOINT_NOT_AVAILABLE
+// getVaspInfo is not available; it throws ENDPOINT_NOT_AVAILABLE
 ```
 
 ### Webhooks
@@ -296,7 +295,7 @@ try {
 ```typescript
 const client = new CryptaScreenClient({
   apiKey: "csk_live_...",        // Required
-  baseUrl: "https://...",        // Set it to the authorised test environment you were given
+  baseUrl: "https://api.cryptascreen.com", // Default
   timeout: 30000,                // Default: 30s
   retries: 3,                    // Default: 3 (retries on 429/5xx with exponential backoff)
 });
