@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 /**
  * One entity attribution row for an address (`EntityLabel`, served by
  * GET /api/v1/intelligence/entity/{chain}/{address}). Labels are context, not sanctions findings.

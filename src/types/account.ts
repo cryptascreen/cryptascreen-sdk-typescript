@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 /** Types of the account, capability, settings and monitoring endpoints. */
 
 /** `GET /auth/me`: the calling identity (an API key resolves to its tenant owner). */

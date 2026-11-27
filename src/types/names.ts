@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 // Sanctions NAME screening (person / company / vessel / aircraft against the sanctions lists). Sanctions only: no PEP, no adverse media, no ID document checks.
 
 export type NameSubjectType = "PERSON" | "ENTITY" | "VESSEL" | "AIRCRAFT";

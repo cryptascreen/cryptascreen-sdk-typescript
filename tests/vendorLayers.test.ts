@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 import { describe, expect, it } from "vitest";
 import type { ScreeningResponse, VendorLayer, VendorLayerStatus } from "../src/index.js";
 

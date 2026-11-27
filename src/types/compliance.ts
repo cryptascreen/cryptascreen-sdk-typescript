@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 // Travel Rule and DAC8 request/response types. Payload builders are NOT regulatory filing.
 
 /** TravelRuleCheckRequest. */

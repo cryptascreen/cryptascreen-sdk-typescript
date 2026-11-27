@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 /**
  * Wallet-result sections of a screened wallet (`GET /api/v1/screen/address/{chain}/{address}/...`).
  *

@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 import axios, { AxiosInstance, AxiosError } from "axios";
 import type { CryptaScreenConfig } from "./types/common.js";
 import {

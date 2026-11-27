@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 /** Events a webhook endpoint can subscribe to. */
 export type WebhookEventType = "HIGH_RISK" | "CRITICAL" | "SANCTIONS_MATCH" | "HEURISTICS_COMPLETE" | "TEST";
 

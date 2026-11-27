@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 // Canonical CryptaScreen screening contract: screening request/response, bulk request and screening job types.
 
 export type RiskLevel =

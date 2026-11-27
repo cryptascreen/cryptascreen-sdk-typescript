@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 export interface CryptaScreenConfig {
   /**
    * Base URL of the CryptaScreen API. Defaults to "https://api.cryptascreen.com", which routes each request to the

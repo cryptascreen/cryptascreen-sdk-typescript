@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 /**
  * Copy guard for everything a customer of the SDK can read.
  *

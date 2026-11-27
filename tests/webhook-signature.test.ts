@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";

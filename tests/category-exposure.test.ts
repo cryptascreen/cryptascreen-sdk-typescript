@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 import { describe, it, expect, beforeEach } from "vitest";
 import MockAdapter from "axios-mock-adapter";
 import type { AxiosInstance } from "axios";

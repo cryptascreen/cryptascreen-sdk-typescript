@@ -1,3 +1,5 @@
+// Copyright (c) 2024-2026 CryptaCount, Inc.
+// SPDX-License-Identifier: MIT
 import type { ReviewStatus, ScreeningFlag, ScreeningLayer } from "./screening.js";
 
 // Canonical sanctions contract: the sanctions check response and the /sanctions/status payload.
